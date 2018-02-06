@@ -121,6 +121,7 @@ public class VideoVerificationView extends AppCompatActivity {
         // Check access to camera
         if (checkCameraHardware(this)) {
             try {
+                releaseCamera();
                 // Create an instance of Camera
                 mCamera = getCameraInstance();
                 if (mCamera != null) {
@@ -175,7 +176,6 @@ public class VideoVerificationView extends AppCompatActivity {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
             mMediaRecorder = null;
-            // TODO lock may break access to camera
             mCamera.lock();           // lock camera for later use
         }
     }
@@ -185,6 +185,29 @@ public class VideoVerificationView extends AppCompatActivity {
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
+    }
+
+    /** Check if this device has a camera */
+    private boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
+
+    /** A safe way to get an instance of the Camera object. */
+    public static Camera getCameraInstance() {
+        Camera c = null;
+        try {
+            c = Camera.open(1); // attempt to get a Camera instance
+        } catch (Exception e) {
+            // Camera is not available (in use or does not exist)
+            System.out.println("Camera instance exception : " + e.getMessage());
+        }
+        return c; // returns null if camera is unavailable
     }
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
@@ -260,7 +283,7 @@ public class VideoVerificationView extends AppCompatActivity {
                                                     System.out.println("JSONResult : " + response.toString());
 
                                                     try {
-                                                        if (!response.get("text").equals(phrase)) {
+                                                        if (!response.get("text".toLowerCase()).equals(phrase.toLowerCase())) {
                                                             overlay.setProgressCircleColor(getResources().getColor(R.color.red));
                                                             overlay.updateDisplayText(getString(R.string.VERIFY_FAIL));
 
@@ -391,29 +414,6 @@ public class VideoVerificationView extends AppCompatActivity {
             }.start();
         }
     };
-
-    /** Check if this device has a camera */
-    private boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            // this device has a camera
-            return true;
-        } else {
-            // no camera on this device
-            return false;
-        }
-    }
-
-    /** A safe way to get an instance of the Camera object. */
-    public static Camera getCameraInstance() {
-        Camera c = null;
-        try {
-            c = Camera.open(1); // attempt to get a Camera instance
-        } catch (Exception e) {
-            // Camera is not available (in use or does not exist)
-            System.out.println("Camera instance exception : " + e.getMessage());
-        }
-        return c; // returns null if camera is unavailable
-    }
 
     /** Create a File for saving an image or audio file */
     private static File getOutputMediaFile(int type){

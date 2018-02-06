@@ -66,6 +66,7 @@ public class RadiusOverlayView extends LinearLayout {
     }
 
     protected void createWindowFrame() {
+
         windowFrame = Bitmap.createBitmap(Resources.getSystem().getDisplayMetrics().widthPixels, Resources.getSystem().getDisplayMetrics().heightPixels, Bitmap.Config.ARGB_8888); // Create a new image we will draw over the map
         Canvas osCanvas = new Canvas(windowFrame); // Create a canvas to draw onto the new image
 

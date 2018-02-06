@@ -42,7 +42,7 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/users"), responseHandler);
     }
 
-    public void checkUserExists(String userId, AsyncHttpResponseHandler responseHandler) {
+    public void getUser(String userId, AsyncHttpResponseHandler responseHandler) {
         client.get(getAbsoluteUrl("/users/" + userId), responseHandler);
     }
 
