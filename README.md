@@ -1,6 +1,6 @@
 # VoiceItApi2AndroidSDK
 
-<img src="Graphics/VoiceItAPI2AndroidSDKHeaderImage.png" width="100%" style="width:100%">
+<img src="Graphics/VoiceItAPI2AndroidSDKHeader.png" width="100%" style="width:100%">
 
 A fully comprehensive SDK that gives you access to the VoiceIt's New VoiceIt API 2.0 featuring Voice + Face Verification and Identification right in your Android app.
 
