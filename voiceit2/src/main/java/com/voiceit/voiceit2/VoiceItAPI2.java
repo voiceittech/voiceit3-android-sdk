@@ -543,16 +543,20 @@ public class VoiceItAPI2 {
         // Our handler for received Intents. This will be called whenever an Intent
         // with an action named "verification-event" is broad-casted.
         BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+            boolean broadcastTriggerd = false;
             @Override
             public void onReceive(Context context, Intent intent) {
-                // Get extra data included in the Intent
-                String JSONResult = intent.getStringExtra("JSON");
+                if (!broadcastTriggerd) {
+                    broadcastTriggerd = true;
+                    // Get extra data included in the Intent
+                    String Response = intent.getStringExtra("Response");
 
-                if(intent.getAction().equals("enrollment-success")) {
-                    responseHandler.sendSuccessMessage(200, null, JSONResult.getBytes());
-                }
-                if(intent.getAction().equals("enrollment-failure")) {
-                    responseHandler.sendFailureMessage(200, null, JSONResult.getBytes(), new Throwable());
+                    if (intent.getAction().equals("enrollment-success")) {
+                        responseHandler.sendSuccessMessage(200, null, Response.getBytes());
+                    }
+                    if (intent.getAction().equals("enrollment-failure")) {
+                        responseHandler.sendFailureMessage(200, null, Response.getBytes(), new Throwable());
+                    }
                 }
             }
         };
@@ -578,16 +582,20 @@ public class VoiceItAPI2 {
         // Our handler for received Intents. This will be called whenever an Intent
         // with an action named "verification-event" is broad-casted.
         BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+            boolean broadcastTriggerd = false;
             @Override
             public void onReceive(Context context, Intent intent) {
-                // Get extra data included in the Intent
-                String JSONResult = intent.getStringExtra("JSON");
+                if (!broadcastTriggerd) {
+                    broadcastTriggerd = true;
+                    // Get extra data included in the Intent
+                    String Response = intent.getStringExtra("Response");
 
-                if(intent.getAction().equals("verification-success")) {
-                    responseHandler.sendSuccessMessage(200, null, JSONResult.getBytes());
-                }
-                if(intent.getAction().equals("verification-failure")) {
-                    responseHandler.sendFailureMessage(200, null, JSONResult.getBytes(), new Throwable());
+                    if (intent.getAction().equals("verification-success")) {
+                        responseHandler.sendSuccessMessage(200, null, Response.getBytes());
+                    }
+                    if (intent.getAction().equals("verification-failure")) {
+                        responseHandler.sendFailureMessage(200, null, Response.getBytes(), new Throwable());
+                    }
                 }
             }
         };
@@ -597,5 +605,6 @@ public class VoiceItAPI2 {
         intentFilter.addAction("verification-success");
         intentFilter.addAction("verification-failure");
         LocalBroadcastManager.getInstance(activity).registerReceiver(mMessageReceiver, intentFilter);
+
     }
 }

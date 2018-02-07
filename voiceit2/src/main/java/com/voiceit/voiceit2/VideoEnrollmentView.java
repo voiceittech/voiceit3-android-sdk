@@ -155,7 +155,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
         } catch(JSONException e) {
             System.out.println("JSON Exception : " + e.getMessage());
         }
-        intent.putExtra("JSON", json.toString());
+        intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
     }
@@ -288,7 +288,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
                                                     System.out.println("JSONResult : " + response.toString());
 
                                                     try {
-                                                        if (!response.get("text".toLowerCase()).equals(phrase.toLowerCase())) {
+                                                        if (!response.getString("text").toLowerCase().equals(phrase.toLowerCase())) {
                                                             overlay.setProgressCircleColor(getResources().getColor(R.color.red));
                                                             overlay.updateDisplayText(getString(R.string.ENROLL_FAIL));
 
@@ -324,7 +324,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
                                                                                 } catch(JSONException e) {
                                                                                     System.out.println("JSON Exception : " + e.getMessage());
                                                                                 }
-                                                                                intent.putExtra("JSON", json.toString());
+                                                                                intent.putExtra("Response", json.toString());
                                                                                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                                                                 finish();
                                                                             }
@@ -342,11 +342,22 @@ public class VideoEnrollmentView extends AppCompatActivity {
                                                                 public void onFinish() {
                                                                     audioFile.deleteOnExit();
                                                                     pictureFile.deleteOnExit();
+                                                                    enrollmentCount++;
+                                                                    isRecording = false;
 
-                                                                    Intent intent = new Intent("enrollment-success");
-                                                                    intent.putExtra("JSON", response.toString());
-                                                                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                                                                    finish();
+                                                                    if (enrollmentCount >= neededEnrollments) {
+                                                                        overlay.updateDisplayText(getString(R.string.ALL_ENROLL_SUCCESS));
+                                                                        // Wait for ~2.5 seconds
+                                                                        new CountDownTimer(2500, 1000) {
+                                                                            public void onTick(long millisUntilFinished) {}
+                                                                            public void onFinish() {
+                                                                                Intent intent = new Intent("enrollment-success");
+                                                                                intent.putExtra("Response", response.toString());
+                                                                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                                                                                finish();
+                                                                            }
+                                                                        }.start();
+                                                                    }
                                                                 }
                                                             }.start();
                                                         }
@@ -392,7 +403,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
                                                                         public void onTick(long millisUntilFinished) {}
                                                                         public void onFinish() {
                                                                             Intent intent = new Intent("enrollment-failure");
-                                                                            intent.putExtra("JSON", errorResponse.toString());
+                                                                            intent.putExtra("Response", errorResponse.toString());
                                                                             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                                                             finish();
                                                                         }
@@ -484,26 +495,26 @@ public class VideoEnrollmentView extends AppCompatActivity {
                 System.out.println("getAllEnrollmentsForUser JSONResult : " + response.toString());
 
                 try {
-                    enrollmentCount = response.getInt("count");
                     // If enough enrollments then return to previous activity
-                    if(enrollmentCount >= neededEnrollments) {
+                    if(response.getInt("count") >= neededEnrollments) {
                         overlay.updateDisplayText(getString(R.string.ALL_ENROLL_SUCCESS));
                         // Wait for ~2.5 seconds
                         new CountDownTimer(2500, 1000) {
                             public void onTick(long millisUntilFinished) {}
                             public void onFinish() {
                                 Intent intent = new Intent("enrollment-success");
-                                intent.putExtra("JSON", response.toString());
+                                intent.putExtra("Response", response.toString());
                                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                 finish();
                             }
                         }.start();
-                    } else if (enrollmentCount < neededEnrollments && enrollmentCount == 0) {
+                    } else if (response.getInt("count") < neededEnrollments && enrollmentCount == 0) {
                         // Delete enrollments and re-enroll
                         myVoiceIt2.deleteAllEnrollmentsForUser(userID, new JsonHttpResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                                 try {
+                                    enrollmentCount = 0;
                                     mCamera.takePicture(null, null, mPicture);
                                 } catch (Exception e) {
                                     System.out.println("Camera exception : " + e.getMessage());
@@ -514,13 +525,14 @@ public class VideoEnrollmentView extends AppCompatActivity {
                             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse){
                                 if (errorResponse != null) {
                                     Intent intent = new Intent("enrollment-failure");
-                                    intent.putExtra("JSON", errorResponse.toString());
+                                    intent.putExtra("Response", errorResponse.toString());
                                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                     finish();
                                 }
                             }
                         });
                     } else {
+                        enrollmentCount = response.getInt("count");
                         // Start enrollment
                         try {
                             mCamera.takePicture(null, null, mPicture);
@@ -538,7 +550,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse){
                 if (errorResponse != null) {
                     Intent intent = new Intent("enrollment-failure");
-                    intent.putExtra("JSON", errorResponse.toString());
+                    intent.putExtra("Response", errorResponse.toString());
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     finish();
                 }

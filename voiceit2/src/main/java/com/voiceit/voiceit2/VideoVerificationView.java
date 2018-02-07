@@ -145,6 +145,7 @@ public class VideoVerificationView extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        System.out.println("Back pressed");
         Intent intent = new Intent("verification-failure");
         JSONObject json = new JSONObject();
         try {
@@ -152,7 +153,7 @@ public class VideoVerificationView extends AppCompatActivity {
         } catch(JSONException e) {
             System.out.println("JSON Exception : " + e.getMessage());
         }
-        intent.putExtra("JSON", json.toString());
+        intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
     }
@@ -283,7 +284,7 @@ public class VideoVerificationView extends AppCompatActivity {
                                                     System.out.println("JSONResult : " + response.toString());
 
                                                     try {
-                                                        if (!response.get("text".toLowerCase()).equals(phrase.toLowerCase())) {
+                                                        if (!response.getString("text").toLowerCase().equals(phrase.toLowerCase())) {
                                                             overlay.setProgressCircleColor(getResources().getColor(R.color.red));
                                                             overlay.updateDisplayText(getString(R.string.VERIFY_FAIL));
 
@@ -319,7 +320,7 @@ public class VideoVerificationView extends AppCompatActivity {
                                                                                 } catch(JSONException e) {
                                                                                     System.out.println("JSON Exception : " + e.getMessage());
                                                                                 }
-                                                                                intent.putExtra("JSON", json.toString());
+                                                                                intent.putExtra("Response", json.toString());
                                                                                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                                                                 finish();
                                                                             }
@@ -339,7 +340,7 @@ public class VideoVerificationView extends AppCompatActivity {
                                                                     pictureFile.deleteOnExit();
 
                                                                     Intent intent = new Intent("verification-success");
-                                                                    intent.putExtra("JSON", response.toString());
+                                                                    intent.putExtra("Response", response.toString());
                                                                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                                                     finish();
                                                                 }
@@ -389,7 +390,7 @@ public class VideoVerificationView extends AppCompatActivity {
                                                                         public void onTick(long millisUntilFinished) {}
                                                                         public void onFinish() {
                                                                             Intent intent = new Intent("verification-failure");
-                                                                            intent.putExtra("JSON", errorResponse.toString());
+                                                                            intent.putExtra("Response", errorResponse.toString());
                                                                             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                                                             finish();
                                                                         }
@@ -491,7 +492,7 @@ public class VideoVerificationView extends AppCompatActivity {
                             public void onTick(long millisUntilFinished) {}
                             public void onFinish() {
                                 Intent intent = new Intent("verification-failure");
-                                intent.putExtra("JSON", response.toString());
+                                intent.putExtra("Response", response.toString());
                                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                                 finish();
                             }
@@ -520,7 +521,7 @@ public class VideoVerificationView extends AppCompatActivity {
                 if (errorResponse != null) {
                     System.out.println("getAllEnrollmentsForUser JSONResult : " + errorResponse.toString());
                     Intent intent = new Intent("verification-failure");
-                    intent.putExtra("JSON", errorResponse.toString());
+                    intent.putExtra("Response", errorResponse.toString());
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     finish();
                 }
