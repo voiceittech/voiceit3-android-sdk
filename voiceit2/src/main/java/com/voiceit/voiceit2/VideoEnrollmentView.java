@@ -97,7 +97,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
             @Override
             public void onFaceDetection(Camera.Face[] faces, Camera camera) {
                 if(!isRecording && enrollmentCount < neededEnrollments) {
-                    if (faces.length == 0) {
+                    if (faces.length == 1) {
                         Log.d("FaceDetection", "face detected at: " + faces.length +
                                 " Face 1 Location X: " + faces[0].rect.centerX() +
                                 " Y: " + faces[0].rect.centerY());
