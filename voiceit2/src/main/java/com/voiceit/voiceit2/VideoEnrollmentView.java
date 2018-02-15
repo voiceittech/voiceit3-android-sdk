@@ -503,6 +503,15 @@ public class VideoEnrollmentView extends AppCompatActivity {
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             System.out.println("Hardware Permissions not granted");
+            Intent intent = new Intent("enrollment-failure");
+            JSONObject json = new JSONObject();
+            try {
+                json.put("message", "Hardware Permissions not granted");
+            } catch(JSONException e) {
+                System.out.println("JSON Exception : " + e.getMessage());
+            }
+            intent.putExtra("Response", json.toString());
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             finish();
         }
     }

@@ -470,6 +470,15 @@ public class VideoVerificationView extends AppCompatActivity {
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             System.out.println("Hardware Permissions not granted");
+            Intent intent = new Intent("verification-failure");
+            JSONObject json = new JSONObject();
+            try {
+                json.put("message", "User Canceled");
+            } catch(JSONException e) {
+                System.out.println("JSON Exception : " + e.getMessage());
+            }
+            intent.putExtra("Response", json.toString());
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             finish();
 
         }
