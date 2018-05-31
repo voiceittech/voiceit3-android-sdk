@@ -72,7 +72,7 @@ import com.voiceit.voiceit2.VoiceItAPI2;
 
 public class MainActivity extends AppCompatActivity {
 
-    public VoiceItAPI2 myVoiceIt2;
+    private VoiceItAPI2 myVoiceIt2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
