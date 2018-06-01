@@ -145,17 +145,18 @@ public class VoiceVerificationView extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        // Confirm permissions and start verification flow
-        requestHardwarePermissions();
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
         // Confirm permissions and start enrollment flow
         requestHardwarePermissions();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(mContinueVerifying) {
+            exitViewWithMessage("voiceit-failure", "User Canceled");
+        }
     }
 
     private void stopRecording() {
