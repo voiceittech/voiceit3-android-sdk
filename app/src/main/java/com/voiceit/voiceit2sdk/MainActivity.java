@@ -14,7 +14,7 @@ import com.voiceit.voiceit2.VoiceItAPI2;
 public class MainActivity extends AppCompatActivity {
 
     private VoiceItAPI2 myVoiceIt2;
-    private String userId = "usr_c380c297a87a4b528ef5353e02d6b0ad";
+    private String userId = "USER_ID";
     private String phrase = "Never forget tomorrow is a new day";
     private String contentLanguage = "en-US";
     private boolean doLivenessCheck = false; // Liveness detection is not used for enrollment views
