@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -82,7 +83,14 @@ public class FaceEnrollmentView extends AppCompatActivity {
 
         // Text output on mOverlay
         mOverlay = findViewById(R.id.overlay);
-    }
+
+        // Lock orientation
+        if (Build.VERSION.SDK_INT >= 18) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+        } else {
+            setRequestedOrientation(Utils.lockOrientationCode(getWindowManager().getDefaultDisplay().getRotation()));
+        }
+}
 
     private void startEnrollmentFlow() {
         mContinueEnrolling = true;

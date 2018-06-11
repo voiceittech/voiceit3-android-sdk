@@ -17,7 +17,6 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -33,11 +32,14 @@ public class RadiusOverlayView extends LinearLayout {
     private int mViewHeight;
     private float mViewMid;
     private int mViewWidth;
+    private int portraitHeight;
 
     private double mProgressCircleEndAngle = 0;
     private double mProgressCircleStartAngle = 270; // Start at the top and go clockwise
     private final Paint invertedCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float circleRadius;
+    private float circleCenterX;
+    private float circleCenterY;
     private RectF screenRectangle;
 
     private boolean mLockTextDisplay = false;
@@ -139,13 +141,18 @@ public class RadiusOverlayView extends LinearLayout {
         // overlay
         screenRectangle = new RectF(0, 0, mViewWidth, mViewHeight);
 
-        // rect inverted circle
+        portraitHeight = (int) (mViewHeight * .8);
+
+        // rect inverted circle overlay
         invertedCirclePaint.setColor(getResources().getColor(R.color.black));
         invertedCirclePaint.setAlpha(230);
 
-        // inverted circle
+        // inverted circle for portrait
         invertedCirclePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT)); // A out B http://en.wikipedia.org/wiki/File:Alpha_compositing.svg
-        circleRadius = Math.min(mViewWidth, mViewHeight) / 2.2f;
+        circleRadius = Math.min(mViewWidth, portraitHeight) * 0.454f;
+        circleCenterX = mViewWidth / 2;
+        circleCenterY = mViewHeight / 2.5f;
+
 
         // progressCircle
         progressCirclePaint.setAntiAlias(true);
@@ -193,11 +200,6 @@ public class RadiusOverlayView extends LinearLayout {
         // Create a canvas to draw onto the new image
         Canvas canvas = new Canvas(mWindowFrame);
 
-        int portraitHeight = (int) (mViewHeight / 1.3);
-
-        float centerX = mViewWidth / 2;
-        float centerY = mViewHeight / 2.8f;
-
         // Draw waveform
         if (mDrawWaveform) {
 
@@ -240,7 +242,7 @@ public class RadiusOverlayView extends LinearLayout {
             canvas.drawRect(screenRectangle, invertedCirclePaint);
 
             // Draw inverted circle
-            canvas.drawCircle(centerX, centerY, circleRadius, invertedCirclePaint);
+            canvas.drawCircle(circleCenterX, circleCenterY, circleRadius, invertedCirclePaint);
 
             final double mRecordingDuration = 4800; // ~4.8 seconds
             // Draw progress circle
@@ -256,7 +258,7 @@ public class RadiusOverlayView extends LinearLayout {
             }
 
             final RectF portrait = new RectF();
-            portrait.set(centerX - circleRadius, centerY - circleRadius, centerX + circleRadius, centerY + circleRadius);
+            portrait.set(circleCenterX - circleRadius, circleCenterY - circleRadius, circleCenterX + circleRadius, circleCenterY + circleRadius);
             Path circlePath = new Path();
             // Start at the top and go clockwise
             circlePath.arcTo(portrait, (float) mProgressCircleStartAngle, (float) mProgressCircleEndAngle, true);

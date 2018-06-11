@@ -1,7 +1,9 @@
 package com.voiceit.voiceit2;
 
+import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
 import android.util.Log;
+import android.view.Surface;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,5 +46,20 @@ class Utils {
             Log.e(mTAG, "mMediaRecorder prepare failed");
         }
         mediaRecorder.start();
+    }
+
+    public static int lockOrientationCode(int code) {
+        switch (code) {
+            case Surface.ROTATION_0:
+                return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            case Surface.ROTATION_180:
+                return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+            case Surface.ROTATION_90:
+                return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            case Surface.ROTATION_270:
+                return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+            default:
+                return 1;
+        }
     }
 }

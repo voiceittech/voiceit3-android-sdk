@@ -772,7 +772,7 @@ public class VoiceItAPI2 {
                 || !arg.substring(0, 3).equals("usr")
                 || id.length() != 32) {
              Log.d(mTAG,"UserId does not meet requirements, " +
-                     "please ensure it is an alphanumeric string between 5 - 36 characters");
+                     "please ensure it is your alphanumeric string of 32 characters");
             return false;
         }
         return true;
@@ -784,7 +784,7 @@ public class VoiceItAPI2 {
                 || !arg.substring(0, 3).equals("grp")
                 || id.length() != 32) {
              Log.d(mTAG,"GroupId does not meet requirements, " +
-                     "please ensure it is an alphanumeric string between 5 - 36 characters");
+                     "please ensure it is your alphanumeric string of 32 characters");
             return false;
         }
         return true;
