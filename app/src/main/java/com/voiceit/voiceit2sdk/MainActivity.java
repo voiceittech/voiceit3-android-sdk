@@ -13,7 +13,7 @@ import com.voiceit.voiceit2.VoiceItAPI2;
 
 public class MainActivity extends AppCompatActivity {
 
-    private VoiceItAPI2 myVoiceIt2;
+    private VoiceItAPI2 myVoiceIt;
     private String userId = "USER_ID";
     private String phrase = "Never forget tomorrow is a new day";
     private String contentLanguage = "en-US";
@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        myVoiceIt2 = new VoiceItAPI2("API_KEY","API_TOK");
+        myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
     }
 
     public void toggleLiveness(View view) {
@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedVoiceEnrollment(View view) {
-        myVoiceIt2.encapsulatedVoiceEnrollment(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedVoiceEnrollment(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedVoiceEnrollment Result : " + response.toString());
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedVoiceVerification(View view) {
-        myVoiceIt2.encapsulatedVoiceVerification(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedVoiceVerification(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedVoiceVerification Result : " + response.toString());
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedVideoEnrollment(View view) {
-        myVoiceIt2.encapsulatedVideoEnrollment(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedVideoEnrollment(this, userId, contentLanguage, phrase, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedVideoEnrollment Result : " + response.toString());
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedVideoVerification(View view) {
-        myVoiceIt2.encapsulatedVideoVerification(this, userId, contentLanguage, phrase, doLivenessCheck, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedVideoVerification(this, userId, contentLanguage, phrase, doLivenessCheck, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedVideoVerification Result : " + response.toString());
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedFaceEnrollment(View view) {
-        myVoiceIt2.encapsulatedFaceEnrollment(this, userId, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedFaceEnrollment(this, userId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedFaceEnrollment Result : " + response.toString());
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedFaceVerification(View view) {
-        myVoiceIt2.encapsulatedFaceVerification(this, userId, doLivenessCheck, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedFaceVerification(this, userId, doLivenessCheck, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedFaceVerification Result : " + response.toString());

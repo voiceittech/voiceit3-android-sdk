@@ -223,7 +223,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), new int[]{}, false);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), new int[]{}, false, 0, 0);
         }
     }
 

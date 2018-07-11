@@ -55,6 +55,8 @@ public class VideoVerificationView extends AppCompatActivity {
     private String mContentLanguage = "";
     private String mPhrase = "";
     private boolean mDoLivenessCheck;
+    private int livenessChallengeFailsAllowed;
+    private int mLivenessChallengesNeeded;
 
     private final int mNeededEnrollments = 3;
     private int mFailedAttempts = 0;
@@ -75,6 +77,8 @@ public class VideoVerificationView extends AppCompatActivity {
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
             mDoLivenessCheck = bundle.getBoolean("doLivenessCheck");
+            livenessChallengeFailsAllowed = bundle.getInt("livenessChallengeFailsAllowed");
+            mLivenessChallengesNeeded = bundle.getInt("livenessChallengesNeeded");
         }
 
         // Hide action bar
@@ -250,12 +254,13 @@ public class VideoVerificationView extends AppCompatActivity {
             mActivity = activity;
             FaceTracker.continueDetecting = false;
             FaceTracker.livenessChallengesPassed = 0;
+            FaceTracker.livenessChallengeFails = 0;
             Utils.randomizeArrayOrder(livenessChallengeTypesCount, livenessChallengeOrder);
         }
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), livenessChallengeOrder, mDoLivenessCheck);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), livenessChallengeOrder, mDoLivenessCheck, livenessChallengeFailsAllowed, mLivenessChallengesNeeded);
         }
     }
 
@@ -462,8 +467,9 @@ public class VideoVerificationView extends AppCompatActivity {
                                 mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
                             }
                             // Reset liveness check and try again
-                            FaceTracker.continueDetecting = true;
                             FaceTracker.livenessChallengesPassed = 0;
+                            FaceTracker.livenessChallengeFails = 0;
+                            FaceTracker.continueDetecting = true;
                         }
                     }
                 }, 4500);

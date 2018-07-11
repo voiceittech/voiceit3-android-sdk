@@ -24,6 +24,7 @@
     <string name="TURN_LEFT">Please turn your face left, then back forward</string>
     <string name="SMILE">Please smile</string>
     <string name="FAILED_LIVENESS">Failed liveness detection</string>
+    <string name="FAILED_LIVENESS_CHALLENGE">Failed liveness challenge, please try again.</string>
 
     <string name="FNFD">Sorry, we couldn\'t quite see your face. Please try again.</string>
     <string name="DDNE">Sorry, something went wrong.Please try again.</string>
@@ -41,15 +42,16 @@
 
     <string name="GERR">Sorry, something went wrong.\nPlease try again.</string>
 
+    <string name="IFVD">Sorry, something went wrong.\nPlease try again.</string>
+    <string name="IFAD">Sorry, something went wrong.\nPlease try again.</string>
     <string name="SRNR">Sorry, something went wrong.\nPlease contact app developer.</string>
-    <string name="IFVD">Sorry, something went wrong.\nPlease contact app developer.</string>
     <string name="UNFD">Sorry, something went wrong.\nPlease contact app developer.</string>
     <string name="MISP">Sorry, something went wrong.\nPlease contact app developer.</string>
     <string name="DAID">Sorry, something went wrong.\nPlease contact app developer.</string>
     <string name="UNAC">Sorry, something went wrong.\nPlease contact app developer.</string>
     <string name="CLNE">Sorry, something went wrong.\nPlease contact app developer.</string>
-    <string name="ACLR">Sorry, something went wrong.\nPlease contact app developer.</string>
-    <string name="IFAD">Sorry, something went wrong.\nPlease contact app developer.</string>
+    <string name="ACLR">Sorry, something went wrong.\nPlease try again, or contact app developer.</string>
+
 
     <string name="CHECK_INTERNET">Unable to contact server.\nPlease check your internet connection.</string>
 

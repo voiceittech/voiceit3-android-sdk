@@ -27,8 +27,11 @@ class FaceTracker extends Tracker<Face> {
     private final int [] mLivenessChallengeOrder;
 
     private final boolean mDoLivenessCheck;
+    private final int mLivenessChallengeFailsAllowed;
+    private final int mLivenessChallengesNeeded;
 
     public static int livenessChallengesPassed = 0;
+    public static int livenessChallengeFails = 0;
     private boolean mDisplayingChallenge = false;
     private boolean mDisplayingChallengeOutcome = false;
     private boolean mTimingLiveness = false;
@@ -39,15 +42,16 @@ class FaceTracker extends Tracker<Face> {
 
     public static boolean continueDetecting = true;
     public static boolean lookingAway = false;
-    private static boolean timingLookingAway = false;
     public static final Handler livenessTimer = new Handler();
 
-    FaceTracker(RadiusOverlayView overlay, Activity activity, viewCallBacks callbacks, int [] livenessChallengeOrder, boolean doLivenessCheck) {
+    FaceTracker(RadiusOverlayView overlay, Activity activity, viewCallBacks callbacks, int [] livenessChallengeOrder, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded) {
         mOverlay = overlay;
         mActivity = activity;
         mCallbacks = callbacks;
         mLivenessChallengeOrder = livenessChallengeOrder;
         mDoLivenessCheck = doLivenessCheck;
+        mLivenessChallengeFailsAllowed = livenessChallengeFailsAllowed;
+        mLivenessChallengesNeeded = livenessChallengesNeeded;
     }
 
     private void setProgressCircleColor(final Integer color) {
@@ -82,6 +86,12 @@ class FaceTracker extends Tracker<Face> {
     }
 
     private void completeLivenessChallenge() {
+        FaceTracker.continueDetecting = false;
+        FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
+        mDisplayingChallenge = false;
+        mDisplayingChallengeOutcome = false;
+        mTimingLiveness = false;
+
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -89,18 +99,13 @@ class FaceTracker extends Tracker<Face> {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        if(FaceTracker.continueDetecting) {
-                            setProgressCircleAngle(270.0, 0.0);
-                            mDisplayingChallenge = false;
-                            mDisplayingChallengeOutcome = false;
-                            mTimingLiveness = false;
-                            FaceTracker.timingLookingAway = false;
-                            FaceTracker.livenessChallengesPassed++;
-                            // Take picture in the middle of liveness checks
-                            if (FaceTracker.livenessChallengesPassed == 1) {
-                                FaceTracker.continueDetecting = false;
-                                mCallbacks.takePictureCallBack();
-                            }
+                        setProgressCircleAngle(270.0, 0.0);
+                        FaceTracker.livenessChallengesPassed++;
+                        // Take picture in the middle of liveness checks
+                        if (FaceTracker.livenessChallengesPassed == 1) {
+                            mCallbacks.takePictureCallBack();
+                        } else {
+                            FaceTracker.continueDetecting = true;
                         }
                     }
                 }, 750);
@@ -228,37 +233,50 @@ class FaceTracker extends Tracker<Face> {
     }
 
     private void failLiveness() {
+        // Cleanup
         FaceTracker.continueDetecting = false;
+        FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
+        mDisplayingChallenge = false;
+        mDisplayingChallengeOutcome = false;
+        mTimingLiveness = false;
 
         // Display fail to user
         setProgressCircleAngle(0.0, 0.0);
         setProgressCircleColor(R.color.failure);
         setProgressCircleAngle(270.0, 359.0);
-        // Lock display so threaded liveness check displays don't interrupt failed message
-        updateDisplayText(mActivity.getString(R.string.FAILED_LIVENESS), true);
+
+        FaceTracker.livenessChallengeFails++;
+        if(FaceTracker.livenessChallengeFails > mLivenessChallengeFailsAllowed) {
+            updateDisplayText(mActivity.getString(R.string.FAILED_LIVENESS), false);
+        } else {
+            updateDisplayText(mActivity.getString(R.string.FAILED_LIVENESS_CHALLENGE), false);
+        }
 
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // Wait for 2.5 seconds
+                // Wait for 2.0 seconds
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent("voiceit-failure");
-                        JSONObject json = new JSONObject();
-                        try {
-                            json.put("message", "User Failed Liveness Detection");
-                        } catch (JSONException e) {
-                            Log.d(mTAG, "JSON Exception : " + e.getMessage());
-                        }
-                        intent.putExtra("Response", json.toString());
-                        LocalBroadcastManager.getInstance(mActivity).sendBroadcast(intent);
 
-                        // Unlock display to show next message then exit
-                        mOverlay.unlockDisplay();
-                        mActivity.finish();
+                        // Exit if failed too many times, else restart
+                        if(FaceTracker.livenessChallengeFails > mLivenessChallengeFailsAllowed) {
+                            Intent intent = new Intent("voiceit-failure");
+                            JSONObject json = new JSONObject();
+                            try {
+                                json.put("message", "User Failed Liveness Detection");
+                            } catch (JSONException e) {
+                                Log.d(mTAG, "JSON Exception : " + e.getMessage());
+                            }
+                            intent.putExtra("Response", json.toString());
+                            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(intent);
+                            mActivity.finish();
+                        } else { // Give another try
+                            FaceTracker.continueDetecting = true;
+                        }
                     }
-                }, 2500);
+                }, 2000);
             }
         });
     }
@@ -270,15 +288,14 @@ class FaceTracker extends Tracker<Face> {
     public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face) {
         if (FaceTracker.continueDetecting) {
             final int numFaces = detectionResults.getDetectedItems().size();
-            final int mLivenessChallengesNeeded = 2;
 
             if (numFaces == 1) {
                 FaceTracker.lookingAway = false;
-                FaceTracker.timingLookingAway = false;
 
-                // End liveness detection
+                // Success or skip liveness detection
                 if (FaceTracker.livenessChallengesPassed == mLivenessChallengesNeeded || !mDoLivenessCheck) {
                     FaceTracker.continueDetecting = false;
+                    FaceTracker.livenessChallengeFails = 0;
 
                     updateDisplayText(mActivity.getString(R.string.WAIT), false);
                     mActivity.runOnUiThread(new Runnable() {
@@ -307,11 +324,8 @@ class FaceTracker extends Tracker<Face> {
                     livenessCheck(face);
 
                     // Start a timer for current liveness challenge
-                    if (!mTimingLiveness) {
+                    if (!mTimingLiveness && FaceTracker.continueDetecting) {
                         mTimingLiveness = true;
-                        // Check if user failed liveness check
-                        // Store current liveness checks passed count to compare if progress was made later
-                        final int cachedLivenessChallengesPassed = FaceTracker.livenessChallengesPassed;
                         mActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -319,10 +333,8 @@ class FaceTracker extends Tracker<Face> {
                                 livenessTimer.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        // Fail if on the same liveness check as when the timer started
-                                        if (cachedLivenessChallengesPassed == FaceTracker.livenessChallengesPassed) {
-                                            failLiveness();
-                                        }
+                                        // Fail if user didn't pass a liveness check in time
+                                        failLiveness();
                                     }
                                 }, 3000);
                             }
@@ -349,25 +361,6 @@ class FaceTracker extends Tracker<Face> {
 
             setProgressCircleAngle(270.0, 0.0);
             updateDisplayText(mActivity.getString(R.string.LOOK_INTO_CAM), false);
-            FaceTracker.timingLookingAway = true;
-
-            mActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Fail after 2 seconds
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Fail if the user looked away too long after starting
-                            if (FaceTracker.timingLookingAway && FaceTracker.continueDetecting) {
-                                FaceTracker.timingLookingAway = false;
-                                failLiveness();
-                            }
-                        }
-                    }, 2000);
-                }
-            });
-
         }
     }
 
