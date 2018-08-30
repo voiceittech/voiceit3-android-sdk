@@ -1,11 +1,10 @@
-if: branch = master
 language: android
 jdk: oraclejdk8
 
 android:
   components:
-     - platform-tools
-     - tools
+    - platform-tools
+    - tools
 
     # The BuildTools version
     - build-tools-27.1.1
@@ -23,5 +22,5 @@ notifications:
   slack:
     secure: UMXBlJrUOYP1B921vEI+pwBgYuXooN9wcEN1xg/QCodea4gzeuW6xeL9cxWE38pYi/1oI1ztA0ArecRDucm6nnChLqgCb9a02ZJe5TK0ITNH3Vxm6xGJ+mL9Q8VKRFzUdcRZGOwuTvCpzGczhhfRZohYBxJZSlhHaM6bk7UFQFRlJiFF64wX8hSUvJtsIb8ZZhFAu6UJ/gXiOmoJE/uC8Xx2g0U8+KKsenPkLt8OrooS+ex3PqpBBZzfjSKFi0DgbtmqSjMPR98NRT7yLEzOBrzq5/0FovOQmYK//Y/z4CNkUKMeROTDqzrLI0zjf6RO8Admg1j/YMSh0nubXgtKaVJlfPKE6559zmTR0YEvNTRwfa+4HPNJWKH1m//gXQxLnOj+a5v+cLb4tn3DHu2KinIGG5dNv3B28JGW/jcXX2qZDWQCEx8b0tlY50mhwGGby9mUirFhnBfyx4KhVZ5LyKzaf1c9esgWNXbckahW/BJEWljBPcKrdV46UKMR7FFinwHOLa0zGcXYodDNy1ZWxOFP4g5hOJ2dCwz+uYU64fhBxdo1xxd1i8lVHmNiv75LjxQPbUZS6o9uIBnxklr6id0w3lGBaFM7TdnERZyPUfkpaNPx1QpPe17RH0ucdw5AcOuxl7M2h0j5kUrKNlJ4IGtY667R0mzcDuBJd0L3/kw=
   email:
-      on_success: never
-      on_failure: never
+    on_success: never
+    on_failure: never
