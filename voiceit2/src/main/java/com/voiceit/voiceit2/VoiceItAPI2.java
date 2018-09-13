@@ -746,7 +746,6 @@ public class VoiceItAPI2 {
         videoIdentification(groupId, contentLanguage, phrase, video, false, responseHandler);
     }
 
-
     public void videoIdentification(String groupId, String contentLanguage, String phrase, File video, boolean doBlinkDetection, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -759,6 +758,38 @@ public class VoiceItAPI2 {
         params.put("doBlinkDetection", doBlinkDetection);
         try {
             params.put("video", video);
+        } catch (FileNotFoundException e) {
+            Log.d("error: ", e.getMessage());
+        }
+
+        client.post(getAbsoluteUrl("/identification/video"), params, responseHandler);
+    }
+
+    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, String audioPath, String photoPath, boolean doBlinkDetection, AsyncHttpResponseHandler responseHandler) {
+        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, new File(audioPath), new File(photoPath), doBlinkDetection, responseHandler);
+    }
+
+    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, String audioPath, String photoPath, AsyncHttpResponseHandler responseHandler) {
+        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, new File(audioPath), new File(photoPath), false, responseHandler);
+    }
+
+    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
+        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, audio, photo, false, responseHandler);
+    }
+
+    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, File audio, File photo, boolean doBlinkDetection, AsyncHttpResponseHandler responseHandler) {
+        if(!groupIdFormatted(groupId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+        RequestParams params = new RequestParams();
+        params.put("groupId", groupId);
+        params.put("contentLanguage", contentLanguage);
+        params.put("phrase", phrase);
+        params.put("doBlinkDetection", doBlinkDetection);
+        try {
+            params.put("audio", audio);
+            params.put("photo", photo);
         } catch (FileNotFoundException e) {
             Log.d("error: ", e.getMessage());
         }
@@ -811,6 +842,32 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
     }
 
+    public void faceIdentificationWithPhoto(String groupId, String photoPath, AsyncHttpResponseHandler responseHandler) {
+        faceIdentificationWithPhoto(groupId, new File(photoPath), false, responseHandler);
+    }
+
+    public void faceIdentificationWithPhoto(String groupId, File photo, AsyncHttpResponseHandler responseHandler) {
+        faceIdentificationWithPhoto(groupId, photo, false, responseHandler);
+    }
+
+
+    public void faceIdentificationWithPhoto(String groupId, File photo,  boolean doBlinkDetection, AsyncHttpResponseHandler responseHandler) {
+        if(!groupIdFormatted(groupId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+        RequestParams params = new RequestParams();
+        params.put("groupId", groupId);
+        params.put("doBlinkDetection", doBlinkDetection);
+        try {
+            params.put("photo", photo);
+        } catch (FileNotFoundException e) {
+            Log.d("error: ", e.getMessage());
+        }
+
+        client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
+    }
+
     public void faceIdentificationByUrl(String groupId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
         faceIdentificationByUrl(groupId, fileUrl, false, responseHandler);
     }
@@ -828,8 +885,8 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/identification/face/byUrl"), params, responseHandler);
     }
 
-    public void encapsulatedVoiceEnrollment(Activity activity, String userID, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userID)) {
+    public void encapsulatedVoiceEnrollment(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
+        if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -838,7 +895,7 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
         bundle.putString("contentLanguage", contentLanguage);
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
@@ -847,8 +904,8 @@ public class VoiceItAPI2 {
         broadcastMessageHandler(activity, responseHandler);
     }
 
-    public void encapsulatedVoiceVerification(Activity activity, String userID, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userID)) {
+    public void encapsulatedVoiceVerification(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
+        if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -857,7 +914,7 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
         bundle.putString("contentLanguage", contentLanguage);
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
@@ -866,8 +923,27 @@ public class VoiceItAPI2 {
         broadcastMessageHandler(activity, responseHandler);
     }
 
-    public void encapsulatedVideoEnrollment(Activity activity, String userID, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userID)) {
+    public void encapsulatedVoiceIdentification(Activity activity, String groupId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
+        if (!groupIdFormatted(groupId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+
+        Intent intent = new Intent(activity, VoiceIdentificationView.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("apiKey", this.apiKey);
+        bundle.putString("apiToken", this.apiToken);
+        bundle.putString("groupId", groupId);
+        bundle.putString("contentLanguage", contentLanguage);
+        bundle.putString("phrase", phrase);
+        intent.putExtras(bundle);
+        activity.startActivity(intent);
+
+        broadcastMessageHandler(activity, responseHandler);
+    }
+
+    public void encapsulatedVideoEnrollment(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
+        if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -876,7 +952,7 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
         bundle.putString("contentLanguage", contentLanguage);
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
@@ -885,12 +961,12 @@ public class VoiceItAPI2 {
         broadcastMessageHandler(activity, responseHandler);
     }
 
-    public void encapsulatedVideoVerification(Activity activity, String userID, String contentLanguage, String phrase, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedVideoVerification(activity, userID, contentLanguage, phrase, doLivenessCheck, 0, 2, responseHandler);
+    public void encapsulatedVideoVerification(Activity activity, String userId, String contentLanguage, String phrase, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
+        encapsulatedVideoVerification(activity, userId, contentLanguage, phrase, doLivenessCheck, 0, 2, responseHandler);
     }
 
-        public void encapsulatedVideoVerification(Activity activity, String userID, String contentLanguage, String phrase, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userID)) {
+        public void encapsulatedVideoVerification(Activity activity, String userId, String contentLanguage, String phrase, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+        if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -899,7 +975,7 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
         bundle.putString("contentLanguage", contentLanguage);
         bundle.putString("phrase", phrase);
         bundle.putBoolean("doLivenessCheck", doLivenessCheck);
@@ -911,8 +987,34 @@ public class VoiceItAPI2 {
         broadcastMessageHandler(activity, responseHandler);
     }
 
-    public void encapsulatedFaceEnrollment(Activity activity, String userID, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userID)) {
+    public void encapsulatedVideoIdentification(Activity activity, String groupId, String contentLanguage, String phrase, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
+        encapsulatedVideoIdentification(activity, groupId, contentLanguage, phrase, doLivenessCheck, 0, 2, responseHandler);
+    }
+
+    public void encapsulatedVideoIdentification(Activity activity, String groupId, String contentLanguage, String phrase, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+        if (!groupIdFormatted(groupId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+
+        Intent intent = new Intent(activity, VideoIdentificationView.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("apiKey", this.apiKey);
+        bundle.putString("apiToken", this.apiToken);
+        bundle.putString("groupId", groupId);
+        bundle.putString("contentLanguage", contentLanguage);
+        bundle.putString("phrase", phrase);
+        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
+        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
+        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
+        intent.putExtras(bundle);
+        activity.startActivity(intent);
+
+        broadcastMessageHandler(activity, responseHandler);
+    }
+
+    public void encapsulatedFaceEnrollment(Activity activity, String userId, final JsonHttpResponseHandler responseHandler) {
+        if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -921,19 +1023,19 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
         intent.putExtras(bundle);
         activity.startActivity(intent);
 
         broadcastMessageHandler(activity, responseHandler);
     }
 
-    public void encapsulatedFaceVerification(Activity activity, String userID, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedFaceVerification(activity, userID, doLivenessCheck, 0, 2, responseHandler);
+    public void encapsulatedFaceVerification(Activity activity, String userId, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
+        encapsulatedFaceVerification(activity, userId, doLivenessCheck, 0, 2, responseHandler);
     }
 
-    public void encapsulatedFaceVerification(Activity activity, String userID, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userID)) {
+    public void encapsulatedFaceVerification(Activity activity, String userId, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+        if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
@@ -942,7 +1044,31 @@ public class VoiceItAPI2 {
         Bundle bundle = new Bundle();
         bundle.putString("apiKey", this.apiKey);
         bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userID", userID);
+        bundle.putString("userId", userId);
+        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
+        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
+        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
+        intent.putExtras(bundle);
+        activity.startActivity(intent);
+
+        broadcastMessageHandler(activity, responseHandler);
+    }
+
+    public void encapsulatedFaceIdentification(Activity activity, String groupId, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
+        encapsulatedFaceIdentification(activity, groupId, doLivenessCheck, 0, 2, responseHandler);
+    }
+
+    public void encapsulatedFaceIdentification(Activity activity, String groupId, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+        if (!groupIdFormatted(groupId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+
+        Intent intent = new Intent(activity, FaceIdentificationView.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("apiKey", this.apiKey);
+        bundle.putString("apiToken", this.apiToken);
+        bundle.putString("groupId", groupId);
         bundle.putBoolean("doLivenessCheck", doLivenessCheck);
         bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
         bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);

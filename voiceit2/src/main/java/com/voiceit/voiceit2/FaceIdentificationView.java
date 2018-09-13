@@ -19,11 +19,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.CameraSource;
@@ -32,28 +27,38 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import cz.msebera.android.httpclient.Header;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FaceEnrollmentView extends AppCompatActivity {
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import cz.msebera.android.httpclient.Header;
+
+public class FaceIdentificationView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
     private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
 
-    private final String mTAG = "FaceEnrollmentView";
+    private final String mTAG = "FaceIdentificationView";
     private Context mContext;
 
     private RadiusOverlayView mOverlay;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserId = "";
+    private String mGroupId = "";
+    private boolean mDoLivenessCheck;
+    private int mLivenessChallengeFailsAllowed;
+    private int mLivenessChallengesNeeded;
 
+    private final int mNeededUsers = 2;
     private int mFailedAttempts = 0;
     private final int mMaxFailedAttempts = 3;
-    private boolean mContinueEnrolling = false;
+    private boolean mContinueIdentifying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +70,10 @@ public class FaceEnrollmentView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserId = bundle.getString("userId");
+            mGroupId = bundle.getString("groupId");
+            mDoLivenessCheck = bundle.getBoolean("doLivenessCheck");
+            mLivenessChallengeFailsAllowed = bundle.getInt("livenessChallengeFailsAllowed");
+            mLivenessChallengesNeeded = bundle.getInt("livenessChallengesNeeded");
         }
 
         // Hide action bar
@@ -78,7 +86,7 @@ public class FaceEnrollmentView extends AppCompatActivity {
         // Set context
         mContext = this;
         // Set content view
-        setContentView(R.layout.activity_face_enrollment_view);
+        setContentView(R.layout.activity_face_identification_view);
         mPreview = findViewById(R.id.camera_preview);
 
         // Text output on mOverlay
@@ -90,27 +98,55 @@ public class FaceEnrollmentView extends AppCompatActivity {
         } else {
             setRequestedOrientation(Utils.lockOrientationCode(getWindowManager().getDefaultDisplay().getRotation()));
         }
-}
+    }
 
-    private void startEnrollmentFlow() {
-        mContinueEnrolling = true;
+    private void startIdentificationFlow() {
+        mContinueIdentifying = true;
         // Try to setup camera source
         createCameraSource();
         // Try to start camera
         startCameraSource();
 
-        // Delete enrollments and re-enroll
-        mVoiceIt2.deleteAllEnrollments(mUserId, new JsonHttpResponseHandler() {
+        mVoiceIt2.getGroup(mGroupId, new JsonHttpResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject Response) {
-                mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
-                // Start tracking faces
-                FaceTracker.continueDetecting = true;
+            public void onSuccess(int statusCode, Header[] headers, final JSONObject Response) {
+                try {
+                    // Check If enough users, otherwise return to previous activity
+                    if (Response.getJSONArray("users").length() < mNeededUsers) {
+                        mOverlay.updateDisplayText(getString(R.string.MISU));
+                        // Wait for ~2.5 seconds
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                exitViewWithMessage("voiceit-failure", "Not enough users in group");
+                            }
+                        }, 2500);
+                    } else {
+                        mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
+                        // Start tracking faces
+                        FaceTracker.continueDetecting = true;
+                    }
+                } catch (JSONException e) {
+                    Log.d(mTAG,"JSON exception : " + e.toString());
+                }
             }
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
                 if (errorResponse != null) {
-                    exitViewWithJSON("voiceit-failure", errorResponse);
+                    try {
+                        // Report error to user
+                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(errorResponse.
+                                getString("responseCode"), "string", getPackageName()))));
+                    } catch (JSONException e) {
+                        Log.d(mTAG,"JSON exception : " + e.toString());
+                    }
+                    // Wait for 2.0 seconds
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            exitViewWithJSON("voiceit-failure", errorResponse);
+                        }
+                    }, 2000);
                 } else {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
@@ -169,7 +205,6 @@ public class FaceEnrollmentView extends AppCompatActivity {
                 .setFacing(CameraSource.CAMERA_FACING_FRONT)
                 .setRequestedFps(30.0f)
                 .build();
-
     }
 
     /**
@@ -207,16 +242,20 @@ public class FaceEnrollmentView extends AppCompatActivity {
     private class FaceTrackerFactory implements MultiProcessor.Factory<Face> {
 
         private final Activity mActivity;
+        private final int livenessChallengeTypesCount = 3;
+        private final int [] livenessChallengeOrder = {1, 2, 3};
 
-        private FaceTrackerFactory(FaceEnrollmentView activity) {
+        private FaceTrackerFactory(FaceIdentificationView activity) {
             mActivity = activity;
             FaceTracker.continueDetecting = false;
             FaceTracker.livenessChallengesPassed = 0;
+            FaceTracker.livenessChallengeFails = 0;
+            Utils.randomizeArrayOrder(livenessChallengeTypesCount, livenessChallengeOrder);
         }
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), new int[]{}, false, 0, 0);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), livenessChallengeOrder, mDoLivenessCheck, mLivenessChallengeFailsAllowed, mLivenessChallengesNeeded);
         }
     }
 
@@ -240,7 +279,7 @@ public class FaceEnrollmentView extends AppCompatActivity {
             }
         } else {
             // Permissions granted, so continue with view
-            startEnrollmentFlow();
+            startIdentificationFlow();
         }
     }
 
@@ -254,12 +293,13 @@ public class FaceEnrollmentView extends AppCompatActivity {
             exitViewWithMessage("voiceit-failure","User Canceled");
         } else {
             // Permissions granted, so continue with view
-            startEnrollmentFlow();
+            startIdentificationFlow();
         }
     }
 
     private void exitViewWithMessage(String action, String message) {
-        mContinueEnrolling = false;
+        mContinueIdentifying = false;
+        FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
         try {
@@ -273,7 +313,8 @@ public class FaceEnrollmentView extends AppCompatActivity {
     }
 
     private void exitViewWithJSON(String action, JSONObject json) {
-        mContinueEnrolling = false;
+        mContinueIdentifying = false;
+        FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -296,7 +337,7 @@ public class FaceEnrollmentView extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mPreview.stop();
-        if(mContinueEnrolling) {
+        if(mContinueIdentifying) {
             exitViewWithMessage("voiceit-failure", "User Canceled");
         }
     }
@@ -309,7 +350,7 @@ public class FaceEnrollmentView extends AppCompatActivity {
         }
     }
 
-    // Enroll after taking picture
+    // Identify after taking picture
     private final CameraSource.PictureCallback mPicture = new CameraSource.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data) {
@@ -329,8 +370,14 @@ public class FaceEnrollmentView extends AppCompatActivity {
                 Log.d(mTAG, "Error accessing file: " + e.getMessage());
             }
 
-            // Enroll with picture taken
-            enrollUserFace();
+            // With liveness checks enabled, a picture is taken before it is done
+            // and identify is called later
+            if(!mDoLivenessCheck) {
+                identifyUserFace();
+            } else {
+                // Continue liveness detection
+                FaceTracker.continueDetecting = true;
+            }
         }
     };
 
@@ -344,9 +391,9 @@ public class FaceEnrollmentView extends AppCompatActivity {
         }
     }
 
-    private void failEnrollment(final JSONObject response) {
+    private void failIdentification(final JSONObject response) {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
-        mOverlay.updateDisplayText(getString(R.string.ENROLL_FAIL));
+        mOverlay.updateDisplayText(getString(R.string.IDENTIFY_FAIL));
         // Wait for ~1.5 seconds
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -371,14 +418,16 @@ public class FaceEnrollmentView extends AppCompatActivity {
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    exitViewWithJSON("voiceit-failure",response);
+                                    exitViewWithJSON("voiceit-failure", response);
                                 }
                             }, 2000);
-                        } else if (mContinueEnrolling) {
+                        } else if (mContinueIdentifying) {
                             if(FaceTracker.lookingAway) {
                                 mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
                             }
-                            // Try again
+                            // Reset liveness check and try again
+                            FaceTracker.livenessChallengesPassed = 0;
+                            FaceTracker.livenessChallengeFails = 0;
                             FaceTracker.continueDetecting = true;
                         }
                     }
@@ -387,18 +436,20 @@ public class FaceEnrollmentView extends AppCompatActivity {
         }, 1500);
     }
 
-    private void enrollUserFace() {
+    private  void identifyUserFace() {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.progressCircle));
         mOverlay.setProgressCircleAngle(270, 359);
-        mVoiceIt2.createFaceEnrollmentWithPhoto(mUserId, mPictureFile, new JsonHttpResponseHandler() {
+
+        mVoiceIt2.faceIdentificationWithPhoto(mGroupId, mPictureFile, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                 try {
-                    // If successful enrollment
+                    // If successful identification
                     if (response.getString("responseCode").equals("SUCC")) {
+                        FaceTracker.continueDetecting = false;
 
                         mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
-                        mOverlay.updateDisplayText(getString(R.string.ENROLL_SUCCESS));
+                        mOverlay.updateDisplayText(getString(R.string.IDENTIFY_SUCCESS));
 
                         // Wait for ~2 seconds
                         new Handler().postDelayed(new Runnable() {
@@ -408,11 +459,10 @@ public class FaceEnrollmentView extends AppCompatActivity {
                                 exitViewWithJSON("voiceit-success", response);
                             }
                         }, 2000);
-
-                        // Fail
                     } else {
+                        // If fail
                         mPictureFile.deleteOnExit();
-                        failEnrollment(response);
+                        failIdentification(response);
                     }
                 } catch (JSONException e) {
                     Log.d(mTAG, "JSON exception : " + e.toString());
@@ -422,9 +472,8 @@ public class FaceEnrollmentView extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
                 if (errorResponse != null) {
-                    Log.d(mTAG, "JSONResult : " + errorResponse.toString());
                     mPictureFile.deleteOnExit();
-                    failEnrollment(errorResponse);
+                    failIdentification(errorResponse);
                 } else {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
@@ -432,7 +481,7 @@ public class FaceEnrollmentView extends AppCompatActivity {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            exitViewWithMessage("voiceit-failure","No response from server");
+                            exitViewWithMessage("voiceit-failure", "No response from server");
                         }
                     }, 2000);
                 }
@@ -442,10 +491,9 @@ public class FaceEnrollmentView extends AppCompatActivity {
 
     class FaceTrackerCallBackImpl implements FaceTracker.viewCallBacks { // Implements callback methods defined in FaceTracker interface
         public void authMethodToCallBack() {
-            enrollUserFace();
+            identifyUserFace();
         }
         public void takePictureCallBack() { takePicture(); }
     }
-
 
 }

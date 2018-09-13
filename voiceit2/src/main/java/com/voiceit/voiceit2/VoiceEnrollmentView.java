@@ -34,7 +34,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
     private MediaRecorder mMediaRecorder = null;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserID = "";
+    private String mUserId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
 
@@ -57,7 +57,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserID = bundle.getString("userID");
+            mUserId = bundle.getString("userId");
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
         }
@@ -88,7 +88,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
     private void startEnrollmentFlow() {
         mContinueEnrolling = true;
         // Delete enrollments and re-enroll
-        mVoiceIt2.deleteAllEnrollments(mUserID, new JsonHttpResponseHandler() {
+        mVoiceIt2.deleteAllEnrollments(mUserId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject Response) {
                 // Record voice and enroll
@@ -314,7 +314,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                             mOverlay.setWaveformMaxAmplitude(1);
 
                             mOverlay.updateDisplayText(getString(R.string.WAIT));
-                            mVoiceIt2.createVoiceEnrollment(mUserID, mContentLanguage, mPhrase, audioFile, new JsonHttpResponseHandler() {
+                            mVoiceIt2.createVoiceEnrollment(mUserId, mContentLanguage, mPhrase, audioFile, new JsonHttpResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                                     try {

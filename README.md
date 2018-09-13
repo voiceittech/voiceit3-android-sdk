@@ -140,10 +140,18 @@ myVoiceIt.encapsulatedVoiceEnrollment(Activity, "USER_ID_HERE", "CONTENT_LANGUAG
 
 #### Encapsulated Voice Verification
 
-Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "Never forget tomorrow is a new day".
+Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), and a given phrase such as "Never forget tomorrow is a new day".
 
 ```java
 myVoiceIt.encapsulatedVoiceVerification(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", new JsonHttpResponseHandler() {...});
+```
+
+#### Encapsulated Voice Identification
+
+Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), and a given phrase such as "Never forget tomorrow is a new day".
+
+```java
+myVoiceIt.encapsulatedVoiceIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", new JsonHttpResponseHandler() {...});
 ```
 
 #### Encapsulated Face Enrollment
@@ -159,12 +167,20 @@ myVoiceIt.encapsulatedFaceEnrollment(Activity, "USER_ID_HERE", new JsonHttpRespo
 Verify user with given userId(begins with 'usr_'), an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
 
 ```java
-myVoiceIt.encapsulatedFaceEnrollment(Activity, "USER_ID_HERE", true, 2, new JsonHttpResponseHandler() {...});
+myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, 2, new JsonHttpResponseHandler() {...});
+```
+
+#### Encapsulated Face Identification
+
+Identify user from given groupId(begins with 'grp_'), an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+
+```java
+myVoiceIt.encapsulatedFaceIdentification(Activity, "GROUP_ID_HERE", true, 2, new JsonHttpResponseHandler() {...});
 ```
 
 #### Encapsulated Video Enrollment
 
-Create three video enrollments for user with given userId(begins with 'usr_') and contentLanguage('en-US','es-ES', etc.), a given phrase such as "my face and voice identify me".
+Create three video enrollments for user with given userId(begins with 'usr_') and contentLanguage('en-US','es-ES', etc.), and a given phrase such as "my face and voice identify me".
 
 ```java
 myVoiceIt.encapsulatedVideoEnrollment(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", new JsonHttpResponseHandler() {...});
@@ -172,10 +188,18 @@ myVoiceIt.encapsulatedVideoEnrollment(Activity, "USER_ID_HERE", "CONTENT_LANGUAG
 
 #### Encapsulated Video Verification
 
-Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
 
 ```java
 myVoiceIt.encapsulatedVideoVerification(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, 2, new JsonHttpResponseHandler() {...});
+```
+
+#### Encapsulated Video Identification
+
+Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+
+```java
+myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, 2, new JsonHttpResponseHandler() {...});
 ```
 
 ### User API Calls

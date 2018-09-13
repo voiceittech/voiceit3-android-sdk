@@ -17,6 +17,8 @@
     <string name="NOT_ENOUGH_ENROLLMENTS">You do not have enough enrollments. Please enroll and try again.</string>
     <string name="VERIFY_SUCCESS">You have been successfully verified!</string>
     <string name="VERIFY_FAIL">Verification unsuccessful</string>
+    <string name="IDENTIFY_SUCCESS">You have been successfully identified!</string>
+    <string name="IDENTIFY_FAIL">Identification unsuccessful</string>
     <string name="TOO_MANY_ATTEMPTS">Too many attempts were made. Please try again later.</string>
     <string name="BLINK_1_TIME">Please blink 1 more time</string>
     <string name="BLINK_2_TIME">Please blink 2 times</string>
@@ -30,16 +32,17 @@
     <string name="DDNE">Sorry, something went wrong.Please try again.</string>
     <string name="FAIL">Failed to verify due to low confidence. Please try again.</string>
     <string name="IFWD">Sorry, something went wrong.\nPlease try again.</string>
-    <string name="TVER">Sorry, no enrollments detected.\nPlease enroll before verifying.</string>
+    <string name="TVER">Sorry, no video enrollments detected.\nPlease enroll and try again.</string>
     <string name="NEHSD">Sorry, we couldn\'t quite catch that.\nPlease speak slower.</string>
     <string name="STTF">Sorry, we couldn\'t understand you.\nPlease speak more clearly or move to a more quiet environment."</string>
     <string name="RWPU">Please do not use recordings and try again.</string>
     <string name="FTMF">Make sure only your face is visible.\nPlease try again.</string>
     <string name="SSTQ">Sorry, please speak louder and try again.</string>
     <string name="SSTL">Sorry, please speak quieter and try again.</string>
-    <string name="NFEF">Sorry, no enrollments detected.\nPlease enroll before verifying.</string>
+    <string name="NFEF">Sorry, no face enrollments detected.\nPlease enroll and try again.</string>
     <string name="PNTE">Sorry, no enrollments with that phrase detected.\nPlease enroll before verifying.</string>
     <string name="PDNM">Sorry, you said the incorrect phrase.\nPlease say \"%1$s\".</string>
+    <string name="MISU">Sorry, group does not have enough users, you need two or more users for identification.\nPlease enroll before identifying.</string>
 
     <string name="NPFC">Sorry, could not find phrases for that content language.\nPlease contact app developer.</string>
 

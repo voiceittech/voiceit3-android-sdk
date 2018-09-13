@@ -51,7 +51,7 @@ public class VideoVerificationView extends AppCompatActivity {
     private RadiusOverlayView mOverlay;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserID = "";
+    private String mUserId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
     private boolean mDoLivenessCheck;
@@ -73,7 +73,7 @@ public class VideoVerificationView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserID = bundle.getString("userID");
+            mUserId = bundle.getString("userId");
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
             mDoLivenessCheck = bundle.getBoolean("doLivenessCheck");
@@ -112,7 +112,7 @@ public class VideoVerificationView extends AppCompatActivity {
         // Try to start camera
         startCameraSource();
 
-        mVoiceIt2.getAllVideoEnrollments(mUserID, new JsonHttpResponseHandler() {
+        mVoiceIt2.getAllVideoEnrollments(mUserId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, final JSONObject Response) {
                 try {
@@ -508,7 +508,7 @@ public class VideoVerificationView extends AppCompatActivity {
                             stopRecording();
 
                             mOverlay.updateDisplayText(getString(R.string.WAIT));
-                            mVoiceIt2.videoVerification(mUserID, mContentLanguage, mPhrase, audioFile, mPictureFile, new JsonHttpResponseHandler() {
+                            mVoiceIt2.videoVerification(mUserId, mContentLanguage, mPhrase, audioFile, mPictureFile, new JsonHttpResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                                     try {

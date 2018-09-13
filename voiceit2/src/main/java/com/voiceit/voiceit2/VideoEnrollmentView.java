@@ -51,7 +51,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
     private RadiusOverlayView mOverlay;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserID = "";
+    private String mUserId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
 
@@ -71,7 +71,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserID = bundle.getString("userID");
+            mUserId = bundle.getString("userId");
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
         }
@@ -108,7 +108,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
         startCameraSource();
 
         // Delete enrollments and re-enroll
-        mVoiceIt2.deleteAllEnrollments(mUserID, new JsonHttpResponseHandler() {
+        mVoiceIt2.deleteAllEnrollments(mUserId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject Response) {
                 mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
@@ -452,7 +452,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
                             stopRecording();
 
                             mOverlay.updateDisplayText(getString(R.string.WAIT));
-                            mVoiceIt2.createVideoEnrollment(mUserID, mContentLanguage, mPhrase, audioFile, mPictureFile, new JsonHttpResponseHandler() {
+                            mVoiceIt2.createVideoEnrollment(mUserId, mContentLanguage, mPhrase, audioFile, mPictureFile, new JsonHttpResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                                     try {

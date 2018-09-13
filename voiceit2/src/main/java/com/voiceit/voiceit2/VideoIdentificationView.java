@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,11 +20,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.CameraSource;
@@ -32,32 +28,41 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import cz.msebera.android.httpclient.Header;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FaceVerificationView extends AppCompatActivity {
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import cz.msebera.android.httpclient.Header;
+
+public class VideoIdentificationView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
     private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
+    private MediaRecorder mMediaRecorder = null;
 
-    private final String mTAG = "FaceVerificationView";
+    private final String mTAG = "VideoIdentificationView";
     private Context mContext;
 
     private RadiusOverlayView mOverlay;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserId = "";
+    private String mGroupId = "";
+    private String mContentLanguage = "";
+    private String mPhrase = "";
     private boolean mDoLivenessCheck;
-    private int mLivenessChallengeFailsAllowed;
+    private int livenessChallengeFailsAllowed;
     private int mLivenessChallengesNeeded;
 
-    private final int mNeededEnrollments = 1;
+    private final int mNeededUsers = 2;
     private int mFailedAttempts = 0;
     private final int mMaxFailedAttempts = 3;
-    private boolean mContinueVerifying = false;
+    private boolean mContinueIdentifying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +74,11 @@ public class FaceVerificationView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserId = bundle.getString("userId");
+            mGroupId = bundle.getString("groupId");
+            mContentLanguage = bundle.getString("contentLanguage");
+            mPhrase = bundle.getString("phrase");
             mDoLivenessCheck = bundle.getBoolean("doLivenessCheck");
-            mLivenessChallengeFailsAllowed = bundle.getInt("livenessChallengeFailsAllowed");
+            livenessChallengeFailsAllowed = bundle.getInt("livenessChallengeFailsAllowed");
             mLivenessChallengesNeeded = bundle.getInt("livenessChallengesNeeded");
         }
 
@@ -85,7 +92,7 @@ public class FaceVerificationView extends AppCompatActivity {
         // Set context
         mContext = this;
         // Set content view
-        setContentView(R.layout.activity_face_verification_view);
+        setContentView(R.layout.activity_video_identification_view);
         mPreview = findViewById(R.id.camera_preview);
 
         // Text output on mOverlay
@@ -99,25 +106,25 @@ public class FaceVerificationView extends AppCompatActivity {
         }
     }
 
-    private void startVerificationFlow() {
-        mContinueVerifying = true;
+    private void startIdentificationFlow() {
+        mContinueIdentifying = true;
         // Try to setup camera source
         createCameraSource();
         // Try to start camera
         startCameraSource();
 
-        mVoiceIt2.getAllFaceEnrollments(mUserId, new JsonHttpResponseHandler() {
+        mVoiceIt2.getGroup(mGroupId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, final JSONObject Response) {
                 try {
                     // Check If enough enrollments, otherwise return to previous activity
-                    if (Response.getInt("count") < mNeededEnrollments) {
+                    if (Response.getJSONArray("users").length() < mNeededUsers) {
                         mOverlay.updateDisplayText(getString(R.string.NOT_ENOUGH_ENROLLMENTS));
                         // Wait for ~2.5 seconds
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                exitViewWithMessage("voiceit-failure", "Not enough enrollments");
+                                exitViewWithMessage("voiceit-failure", "Not enough users in group");
                             }
                         }, 2500);
                     } else {
@@ -244,7 +251,7 @@ public class FaceVerificationView extends AppCompatActivity {
         private final int livenessChallengeTypesCount = 3;
         private final int [] livenessChallengeOrder = {1, 2, 3};
 
-        private FaceTrackerFactory(FaceVerificationView activity) {
+        private FaceTrackerFactory(VideoIdentificationView activity) {
             mActivity = activity;
             FaceTracker.continueDetecting = false;
             FaceTracker.livenessChallengesPassed = 0;
@@ -254,22 +261,32 @@ public class FaceVerificationView extends AppCompatActivity {
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), livenessChallengeOrder, mDoLivenessCheck, mLivenessChallengeFailsAllowed, mLivenessChallengesNeeded);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), livenessChallengeOrder, mDoLivenessCheck, livenessChallengeFailsAllowed, mLivenessChallengesNeeded);
         }
     }
 
     private void requestHardwarePermissions() {
+        final int PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
         final int PERMISSIONS_REQUEST_CAMERA = 1;
         final int ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 2;
         // MY_PERMISSIONS_REQUEST_* is an app-defined int constant. The callback method gets the
         // result of the request.
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
 
             if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{ Manifest.permission.CAMERA},
+                requestPermissions(new String[]{
+                                Manifest.permission.RECORD_AUDIO,
+                                Manifest.permission.CAMERA},
                         ASK_MULTIPLE_PERMISSION_REQUEST_CODE);
             } else {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+                            PERMISSIONS_REQUEST_RECORD_AUDIO);
+                }
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
@@ -278,7 +295,7 @@ public class FaceVerificationView extends AppCompatActivity {
             }
         } else {
             // Permissions granted, so continue with view
-            startVerificationFlow();
+            startIdentificationFlow();
         }
     }
 
@@ -286,19 +303,23 @@ public class FaceVerificationView extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.d(mTAG,"Hardware Permissions not granted");
-            exitViewWithMessage("voiceit-failure","User Canceled");
+            exitViewWithMessage("voiceit-failure", "Hardware Permissions not granted");
+
         } else {
             // Permissions granted, so continue with view
-            startVerificationFlow();
+            startIdentificationFlow();
         }
     }
 
     private void exitViewWithMessage(String action, String message) {
-        mContinueVerifying = false;
+        mContinueIdentifying = false;
         FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
+        stopRecording();
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
         try {
@@ -312,8 +333,9 @@ public class FaceVerificationView extends AppCompatActivity {
     }
 
     private void exitViewWithJSON(String action, JSONObject json) {
-        mContinueVerifying = false;
+        mContinueIdentifying = false;
         FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
+        stopRecording();
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -322,7 +344,7 @@ public class FaceVerificationView extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        exitViewWithMessage("voiceit-failure","User Canceled");
+        exitViewWithMessage("voiceit-failure", "User Canceled");
     }
 
     @Override
@@ -336,7 +358,7 @@ public class FaceVerificationView extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mPreview.stop();
-        if(mContinueVerifying) {
+        if(mContinueIdentifying) {
             exitViewWithMessage("voiceit-failure", "User Canceled");
         }
     }
@@ -349,7 +371,20 @@ public class FaceVerificationView extends AppCompatActivity {
         }
     }
 
-    // Verify after taking picture
+    private void stopRecording() {
+        if (mMediaRecorder != null) {
+            try {
+                mMediaRecorder.stop();
+            } catch (Exception e) {
+                Log.d(mTAG, "Error trying to stop MediaRecorder");
+            }
+            mMediaRecorder.reset();
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+        }
+    }
+
+    // Identify after taking picture
     private final CameraSource.PictureCallback mPicture = new CameraSource.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data) {
@@ -370,10 +405,10 @@ public class FaceVerificationView extends AppCompatActivity {
             }
 
             // With liveness checks enabled, a picture is taken before it is done
-            // and verify is called later
+            // and identify is called later
             if(!mDoLivenessCheck) {
-                verifyUserFace();
-            } else {
+                identifyUser();
+            }  else {
                 // Continue liveness detection
                 FaceTracker.continueDetecting = true;
             }
@@ -386,21 +421,27 @@ public class FaceVerificationView extends AppCompatActivity {
             mCameraSource.takePicture(null, mPicture);
         } catch (Exception e) {
             Log.d(mTAG, "Camera exception : " + e.getMessage());
-            exitViewWithMessage("voiceit-failure","Camera Error");
+            exitViewWithMessage("voiceit-failure", "Camera Error");
         }
     }
 
-    private void failVerification(final JSONObject response) {
+    private void failIdentification(final JSONObject response) {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
-        mOverlay.updateDisplayText(getString(R.string.VERIFY_FAIL));
+        mOverlay.updateDisplayText(getString(R.string.IDENTIFY_FAIL));
+
         // Wait for ~1.5 seconds
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
                     // Report error to user
-                    mOverlay.updateDisplayText(getString((getResources().getIdentifier(response.
-                            getString("responseCode"), "string", getPackageName()))));
+                    if (response.getString("responseCode").equals("PDNM")) {
+                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(response.
+                                getString("responseCode"), "string", getPackageName())), mPhrase));
+                    } else {
+                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(response.
+                                getString("responseCode"), "string", getPackageName()))));
+                    }
                 } catch (JSONException e) {
                     Log.d(mTAG,"JSON exception : " + e.toString());
                 }
@@ -408,10 +449,17 @@ public class FaceVerificationView extends AppCompatActivity {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        mFailedAttempts++;
+                        try {
+                            if (response.getString("responseCode").equals("PNTE")) {
+                                exitViewWithJSON("voiceit-failure", response);
+                            }
+                        } catch (JSONException e) {
+                            Log.d(mTAG,"JSON exception : " + e.toString());
+                        }
 
+                        mFailedAttempts++;
                         // User failed too many times
-                        if (mFailedAttempts >= mMaxFailedAttempts) {
+                        if(mFailedAttempts >= mMaxFailedAttempts) {
                             mOverlay.updateDisplayText(getString(R.string.TOO_MANY_ATTEMPTS));
                             // Wait for ~2 seconds
                             new Handler().postDelayed(new Runnable() {
@@ -419,8 +467,8 @@ public class FaceVerificationView extends AppCompatActivity {
                                 public void run() {
                                     exitViewWithJSON("voiceit-failure", response);
                                 }
-                            }, 2000);
-                        } else if (mContinueVerifying) {
+                            },2000);
+                        } else if (mContinueIdentifying) {
                             if(FaceTracker.lookingAway) {
                                 mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
                             }
@@ -435,64 +483,113 @@ public class FaceVerificationView extends AppCompatActivity {
         }, 1500);
     }
 
-    private  void verifyUserFace() {
-        mOverlay.setProgressCircleColor(getResources().getColor(R.color.progressCircle));
-        mOverlay.setProgressCircleAngle(270, 359);
+    private void identifyUser() {
+        if(mContinueIdentifying) {
 
-        mVoiceIt2.faceVerificationWithPhoto(mUserId, mPictureFile, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
-                try {
-                    // If successful verification
-                    if (response.getString("responseCode").equals("SUCC")) {
-                        FaceTracker.continueDetecting = false;
-
-                        mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
-                        mOverlay.updateDisplayText(getString(R.string.VERIFY_SUCCESS));
-
-                        // Wait for ~2 seconds
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mPictureFile.deleteOnExit();
-                                exitViewWithJSON("voiceit-success", response);
-                            }
-                        }, 2000);
-                    } else {
-                        // If fail
-                        mPictureFile.deleteOnExit();
-                        failVerification(response);
-                    }
-                } catch (JSONException e) {
-                    Log.d(mTAG, "JSON exception : " + e.toString());
+            mOverlay.updateDisplayText(getString(R.string.SAY_PASSPHRASE, mPhrase));
+            try {
+                // Create file for audio
+                final File audioFile = Utils.getOutputMediaFile(".wav");
+                if (audioFile == null) {
+                    exitViewWithMessage("voiceit-failure", "Creating audio file failed");
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
-                if (errorResponse != null) {
-                    mPictureFile.deleteOnExit();
-                    failVerification(errorResponse);
-                } else {
-                    Log.e(mTAG, "No response from server");
-                    mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
-                    // Wait for 2.0 seconds
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exitViewWithMessage("voiceit-failure", "No response from server");
+                // Setup device and capture audio
+                mMediaRecorder = new MediaRecorder();
+                Utils.startMediaRecorder(mMediaRecorder, audioFile);
+
+                mOverlay.setProgressCircleColor(getResources().getColor(R.color.progressCircle));
+                mOverlay.startDrawingProgressCircle();
+                // Record for ~5 seconds, then send data
+                // 4800 to make sure recording is not over 5 seconds
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mContinueIdentifying) {
+                            stopRecording();
+
+                            mOverlay.updateDisplayText(getString(R.string.WAIT));
+                            mVoiceIt2.videoIdentificationWithPhoto(mGroupId, mContentLanguage, mPhrase, audioFile, mPictureFile, new JsonHttpResponseHandler() {
+                                @Override
+                                public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
+                                    try {
+                                         if (response.getString("responseCode").equals("SUCC")) {
+                                            mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
+                                            mOverlay.updateDisplayTextAndLock(getString(R.string.IDENTIFY_SUCCESS));
+
+                                            // Wait for ~2 seconds
+                                            new Handler().postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    audioFile.deleteOnExit();
+                                                    mPictureFile.deleteOnExit();
+
+                                                    exitViewWithJSON("voiceit-success", response);
+                                                }
+                                            }, 2000);
+
+                                            // Fail
+                                        } else {
+                                            audioFile.deleteOnExit();
+                                            mPictureFile.deleteOnExit();
+                                            failIdentification(response);
+                                        }
+                                    } catch (JSONException e) {
+                                        Log.d(mTAG, "JSON Error: " + e.getMessage());
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
+                                    if (errorResponse != null) {
+                                        Log.d(mTAG, "JSONResult : " + errorResponse.toString());
+
+                                        audioFile.deleteOnExit();
+                                        mPictureFile.deleteOnExit();
+
+                                        try {
+                                            if (errorResponse.getString("responseCode").equals("TVER")) {
+                                                // Wait for ~2 seconds
+                                                new Handler().postDelayed(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        exitViewWithJSON("voiceit-failure", errorResponse);
+                                                    }
+                                                }, 2000);
+                                            }
+                                        } catch (JSONException e) {
+                                            Log.d(mTAG, "JSON exception : " + e.toString());
+                                        }
+
+                                        failIdentification(errorResponse);
+                                    } else {
+                                        Log.e(mTAG, "No response from server");
+                                        mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
+                                        // Wait for 2.0 seconds
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                exitViewWithMessage("voiceit-failure", "No response from server");
+                                            }
+                                        }, 2000);
+                                    }
+                                }
+                            });
                         }
-                    }, 2000);
-                }
+                    }
+                }, 4800);
+            } catch (Exception ex) {
+                Log.d(mTAG, "Recording Error: " + ex.getMessage());
+                exitViewWithMessage("voiceit-failure", "Recording Error");
             }
-        });
+
+        }
     }
 
     class FaceTrackerCallBackImpl implements FaceTracker.viewCallBacks { // Implements callback methods defined in FaceTracker interface
         public void authMethodToCallBack() {
-            verifyUserFace();
+            identifyUser();
         }
         public void takePictureCallBack() { takePicture(); }
     }
-
 }

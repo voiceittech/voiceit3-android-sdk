@@ -16,31 +16,33 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import java.io.File;
-
 import com.loopj.android.http.JsonHttpResponseHandler;
-import cz.msebera.android.httpclient.Header;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class VoiceVerificationView extends AppCompatActivity {
+import java.io.File;
 
-    private final String mTAG = "VoiceVerificationView";
+import cz.msebera.android.httpclient.Header;
+
+public class VoiceIdentificationView extends AppCompatActivity {
+
+    private final String mTAG = "VoiceIdentificationView";
     private Context mContext;
 
     private RadiusOverlayView mOverlay;
     private MediaRecorder mMediaRecorder = null;
 
     private VoiceItAPI2 mVoiceIt2;
-    private String mUserId = "";
+    private String mGroupId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
 
-    private final int mNeededEnrollments = 3;
+    private int mNeededUsers = 2;
     private int mFailedAttempts = 0;
     private final int mMaxFailedAttempts = 3;
-    private boolean mContinueVerifying = false;
+    private boolean mContinueIdentifying = false;
 
     private boolean displayWaveform = true;
     private final long REFRESH_WAVEFORM_INTERVAL_MS = 30;
@@ -55,7 +57,7 @@ public class VoiceVerificationView extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null) {
             mVoiceIt2 = new VoiceItAPI2(bundle.getString("apiKey"), bundle.getString("apiToken"));
-            mUserId = bundle.getString("userId");
+            mGroupId = bundle.getString("groupId");
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
         }
@@ -70,7 +72,7 @@ public class VoiceVerificationView extends AppCompatActivity {
         // Set context
         mContext = this;
         // Set content view
-        setContentView(R.layout.activity_voice_verification_view);
+        setContentView(R.layout.activity_voice_identification_view);
 
         // Get overlay
         mOverlay = findViewById(R.id.overlay);
@@ -102,7 +104,7 @@ public class VoiceVerificationView extends AppCompatActivity {
             }
         } else {
             // Permissions granted, so continue with view
-            verifyUser();
+            identifyUser();
         }
     }
 
@@ -116,12 +118,12 @@ public class VoiceVerificationView extends AppCompatActivity {
             exitViewWithMessage("voiceit-failure", "Hardware Permissions not granted");
         } else {
             // Permissions granted, so continue with view
-            verifyUser();
+            identifyUser();
         }
     }
 
     private void exitViewWithMessage(String action, String message) {
-        mContinueVerifying = false;
+        mContinueIdentifying = false;
         stopRecording();
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
@@ -136,7 +138,7 @@ public class VoiceVerificationView extends AppCompatActivity {
     }
 
     private void exitViewWithJSON(String action, JSONObject json) {
-        mContinueVerifying = false;
+        mContinueIdentifying = false;
         stopRecording();
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
@@ -159,7 +161,7 @@ public class VoiceVerificationView extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(mContinueVerifying) {
+        if(mContinueIdentifying) {
             exitViewWithMessage("voiceit-failure", "User Canceled");
         }
     }
@@ -178,9 +180,9 @@ public class VoiceVerificationView extends AppCompatActivity {
         }
     }
 
-    private void failVerification(final JSONObject response) {
+    private void failIdentification(final JSONObject response) {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
-        mOverlay.updateDisplayText(getString(R.string.VERIFY_FAIL));
+        mOverlay.updateDisplayText(getString(R.string.IDENTIFY_FAIL));
 
         // Wait for ~1.5 seconds
         new Handler().postDelayed(new Runnable() {
@@ -203,7 +205,8 @@ public class VoiceVerificationView extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            if (response.getString("responseCode").equals("PNTE")) {
+                            if (response.getString("responseCode").equals("PNTE")
+                                    || response.getString("responseCode").equals("MISU")) {
                                 exitViewWithJSON("voiceit-failure", response);
                             }
                         } catch (JSONException e) {
@@ -221,7 +224,7 @@ public class VoiceVerificationView extends AppCompatActivity {
                                     exitViewWithJSON("voiceit-failure", response);
                                 }
                             }, 2000);
-                        } else if (mContinueVerifying) {
+                        } else if (mContinueIdentifying) {
                             // Try again
                             recordVoice();
                         }
@@ -245,9 +248,9 @@ public class VoiceVerificationView extends AppCompatActivity {
         return System.currentTimeMillis() - currentTime;
     }
 
-    // Verify after recording voice
+    // Identify after recording voice
     private void recordVoice() {
-        if (mContinueVerifying) {
+        if (mContinueIdentifying) {
 
             mOverlay.updateDisplayText(getString(R.string.SAY_PASSPHRASE, mPhrase));
             try {
@@ -284,20 +287,20 @@ public class VoiceVerificationView extends AppCompatActivity {
                         // Stop waveform
                         displayWaveform = false;
 
-                        if (mContinueVerifying) {
+                        if (mContinueIdentifying) {
                             stopRecording();
 
                             // Reset sine wave
                             mOverlay.setWaveformMaxAmplitude(1);
 
                             mOverlay.updateDisplayText(getString(R.string.WAIT));
-                            mVoiceIt2.voiceVerification(mUserId, mContentLanguage, mPhrase, audioFile, new JsonHttpResponseHandler() {
+                            mVoiceIt2.voiceIdentification(mGroupId, mContentLanguage, mPhrase, audioFile, new JsonHttpResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                                     try {
                                         if (response.getString("responseCode").equals("SUCC")) {
                                             mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
-                                            mOverlay.updateDisplayTextAndLock(getString(R.string.VERIFY_SUCCESS));
+                                            mOverlay.updateDisplayTextAndLock(getString(R.string.IDENTIFY_SUCCESS));
 
                                             // Wait for ~2 seconds then exit
                                             new Handler().postDelayed(new Runnable() {
@@ -310,7 +313,7 @@ public class VoiceVerificationView extends AppCompatActivity {
                                             // Fail
                                         } else {
                                             audioFile.deleteOnExit();
-                                            failVerification(response);
+                                            failIdentification(response);
                                         }
                                     } catch (JSONException e) {
                                         Log.d(mTAG, "JSON Exception: " + e.getMessage());
@@ -323,7 +326,7 @@ public class VoiceVerificationView extends AppCompatActivity {
                                         Log.d(mTAG, "JSONResult : " + errorResponse.toString());
 
                                         audioFile.deleteOnExit();
-                                        failVerification(errorResponse);
+                                        failIdentification(errorResponse);
                                     } else {
                                         Log.e(mTAG, "No response from server");
                                         mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
@@ -348,23 +351,22 @@ public class VoiceVerificationView extends AppCompatActivity {
         }
     }
 
-    private void verifyUser() {
-        mContinueVerifying = true;
-        // Check enrollments then verify
-        mVoiceIt2.getAllVoiceEnrollments(mUserId, new JsonHttpResponseHandler() {
+    private void identifyUser() {
+        mContinueIdentifying = true;
+        mVoiceIt2.getGroup(mGroupId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
                 try {
                     // Check If enough enrollments, otherwise return to previous activity
-                    if(response.getInt("count") < mNeededEnrollments) {
-                        mOverlay.updateDisplayText(getString(R.string.NOT_ENOUGH_ENROLLMENTS));
-                        // Wait for ~2.5 seconds
+                    if(response.getJSONArray("users").length() < mNeededUsers) {
+                        mOverlay.updateDisplayText(getString(R.string.MISU));
+                        // Wait for ~4.0 seconds
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                exitViewWithMessage("voiceit-failure", "Not enough enrollments");
+                                exitViewWithMessage("voiceit-failure", "Not enough users in group");
                             }
-                        }, 2500);
+                        }, 4000);
                     } else {
                         try {
                             // Wait for .5 seconds to read message
@@ -381,8 +383,8 @@ public class VoiceVerificationView extends AppCompatActivity {
                         }
                     }
                 } catch (JSONException e) {
-                    Log.d(mTAG,"JSON userId error: " + e.getMessage());
-                    exitViewWithMessage("voiceit-failure", "JSON userId error");
+                    Log.d(mTAG,"JSON groupId error: " + e.getMessage());
+                    exitViewWithMessage("voiceit-failure", "JSON groupId error");
                 }
             }
             @Override
@@ -416,4 +418,7 @@ public class VoiceVerificationView extends AppCompatActivity {
             }
         });
     }
+
+
+
 }
