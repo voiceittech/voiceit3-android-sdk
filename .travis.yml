@@ -36,12 +36,9 @@ before_script:
   - adb shell input keyevent 82 &
 
 script:
-    # - ./gradlew -Pandroid.testInstrumentationRunnerArguments.key=$VIAPIKEY -Pandroid.testInstrumentationRunnerArguments.tok=$VIAPITOKEN connectedAndroidTest
-  - echo "YOLO"
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.key=$VIAPIKEY -Pandroid.testInstrumentationRunnerArguments.tok=$VIAPITOKEN connectedAndroidTest
 
 after_success:
-  - pwd
-  - ls
   - ./update.sh
 
 before_cache:
