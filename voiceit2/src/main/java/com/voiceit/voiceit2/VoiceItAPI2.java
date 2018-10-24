@@ -210,14 +210,6 @@ public class VoiceItAPI2 {
         createFaceEnrollment(userId, new File(videoPath), responseHandler);
     }
 
-    public void createFaceEnrollment(String userId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollment(userId, new File(videoPath), false, responseHandler);
-    }
-
-    public void createFaceEnrollment(String userId, File video, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollment(userId, video, false, responseHandler);
-    }
-
     public void createFaceEnrollment(String userId, File video, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -238,14 +230,6 @@ public class VoiceItAPI2 {
         createFaceEnrollmentWithPhoto(userId, new File(photoPath), responseHandler);
     }
 
-    public void createFaceEnrollmentWithPhoto(String userId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollmentWithPhoto(userId, new File(photoPath), false, responseHandler);
-    }
-
-    public void createFaceEnrollmentWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollmentWithPhoto(userId, photo, false, responseHandler);
-    }
-
     public void createFaceEnrollmentWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -263,10 +247,6 @@ public class VoiceItAPI2 {
     }
 
     public void createFaceEnrollmentByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollmentByUrl(userId, fileUrl, false, responseHandler);
-    }
-
-    public void createFaceEnrollmentByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
@@ -276,10 +256,6 @@ public class VoiceItAPI2 {
         params.put("fileUrl", fileUrl);
 
         client.post(getAbsoluteUrl("/enrollments/face/byUrl"), params, responseHandler);
-    }
-
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollment(userId, contentLanguage, phrase, audio, photo, false, responseHandler);
     }
 
     public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
@@ -301,16 +277,8 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/enrollments/video"), params, responseHandler);
     }
 
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollment(userId, contentLanguage, phrase, new File(videoPath), responseHandler);
-    }
-
     public void createVideoEnrollment(String userId, String contentLanguage, String phrase,String videoPath, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollment(userId, contentLanguage, phrase, new File(videoPath), false, responseHandler);
-    }
-
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollment(userId, contentLanguage, phrase, video, false, responseHandler);
+        createVideoEnrollment(userId, contentLanguage, phrase, new File(videoPath), responseHandler);
     }
 
     public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
@@ -329,10 +297,6 @@ public class VoiceItAPI2 {
         }
 
         client.post(getAbsoluteUrl("/enrollments/video"), params, responseHandler);
-    }
-
-    public void createVideoEnrollmentByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollmentByUrl(userId, contentLanguage, phrase, fileUrl, false, responseHandler);
     }
 
     public void createVideoEnrollmentByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
@@ -502,18 +466,9 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/verification/voice/byUrl"), params, responseHandler);
     }
 
-    public void faceVerification(String userId, String videoPath,  AsyncHttpResponseHandler responseHandler) {
+    public void faceVerification(String userId, String videoPath, AsyncHttpResponseHandler responseHandler) {
         faceVerification(userId, new File(videoPath), responseHandler);
     }
-
-    public void faceVerification(String userId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        faceVerification(userId, new File(videoPath), false, responseHandler);
-    }
-
-    public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
-        faceVerification(userId, video, false, responseHandler);
-    }
-
 
     public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
@@ -536,14 +491,6 @@ public class VoiceItAPI2 {
         faceVerificationWithPhoto(userId, new File(photoPath), responseHandler);
     }
 
-    public void faceVerificationWithPhoto(String userId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        faceVerificationWithPhoto(userId, new File(photoPath), false, responseHandler);
-    }
-
-    public void faceVerificationWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
-        faceVerificationWithPhoto( userId, photo, false, responseHandler);
-    }
-
     public void faceVerificationWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -561,11 +508,6 @@ public class VoiceItAPI2 {
     }
 
     public void faceVerificationByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        faceVerificationByUrl(userId, fileUrl, false, responseHandler);
-    }
-
-
-    public void faceVerificationByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
@@ -580,15 +522,6 @@ public class VoiceItAPI2 {
     public void videoVerification(String userId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
         videoVerification(userId, contentLanguage, phrase, new File(videoPath), responseHandler);
     }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        videoVerification(userId, contentLanguage, phrase, new File(videoPath), false, responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        videoVerification(userId, contentLanguage, phrase, video, false, responseHandler);
-    }
-
 
     public void videoVerification(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
@@ -609,10 +542,6 @@ public class VoiceItAPI2 {
     }
 
     public void videoVerification(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        videoVerification(userId, contentLanguage, phrase, audio, photo, false, responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
@@ -629,10 +558,6 @@ public class VoiceItAPI2 {
         }
 
         client.post(getAbsoluteUrl("/verification/video"), params, responseHandler);
-    }
-
-    public void videoVerificationByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        videoVerificationByUrl(userId, contentLanguage, phrase, fileUrl, false, responseHandler);
     }
 
     public void videoVerificationByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
@@ -726,14 +651,6 @@ public class VoiceItAPI2 {
         videoIdentification(groupId, contentLanguage, phrase, new File(videoPath), responseHandler);
     }
 
-    public void videoIdentification(String groupId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        videoIdentification(groupId, contentLanguage, phrase, new File(videoPath), false, responseHandler);
-    }
-
-    public void videoIdentification(String groupId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        videoIdentification(groupId, contentLanguage, phrase, video, false, responseHandler);
-    }
-
     public void videoIdentification(String groupId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -756,14 +673,6 @@ public class VoiceItAPI2 {
         videoIdentificationWithPhoto(groupId, contentLanguage, phrase, new File(audioPath), new File(photoPath), responseHandler);
     }
 
-    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, String audioPath, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, new File(audioPath), new File(photoPath), false, responseHandler);
-    }
-
-    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, audio, photo, false, responseHandler);
-    }
-
     public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -784,10 +693,6 @@ public class VoiceItAPI2 {
     }
 
     public void videoIdentificationByUrl(String groupId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        videoIdentificationByUrl(groupId, contentLanguage, phrase, fileUrl,false, responseHandler);
-    }
-
-    public void videoIdentificationByUrl(String groupId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
@@ -802,13 +707,8 @@ public class VoiceItAPI2 {
     }
 
     public void faceIdentification(String groupId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        faceIdentification(groupId, new File(videoPath), false, responseHandler);
+        faceIdentification(groupId, new File(videoPath), responseHandler);
     }
-
-    public void faceIdentification(String groupId, File video, AsyncHttpResponseHandler responseHandler) {
-        faceIdentification(groupId, video, false, responseHandler);
-    }
-
 
     public void faceIdentification(String groupId, File video, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
@@ -827,13 +727,8 @@ public class VoiceItAPI2 {
     }
 
     public void faceIdentificationWithPhoto(String groupId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        faceIdentificationWithPhoto(groupId, new File(photoPath), false, responseHandler);
+        faceIdentificationWithPhoto(groupId, new File(photoPath), responseHandler);
     }
-
-    public void faceIdentificationWithPhoto(String groupId, File photo, AsyncHttpResponseHandler responseHandler) {
-        faceIdentificationWithPhoto(groupId, photo, false, responseHandler);
-    }
-
 
     public void faceIdentificationWithPhoto(String groupId, File photo, AsyncHttpResponseHandler responseHandler) {
         if(!groupIdFormatted(groupId)) {
@@ -849,10 +744,6 @@ public class VoiceItAPI2 {
         }
 
         client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
-    }
-
-    public void faceIdentificationByUrl(String groupId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        faceIdentificationByUrl(groupId, fileUrl, false, responseHandler);
     }
 
     public void faceIdentificationByUrl(String groupId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
