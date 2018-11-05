@@ -169,18 +169,18 @@ myVoiceIt.encapsulatedFaceEnrollment(Activity, "USER_ID_HERE", new JsonHttpRespo
 
 #### Encapsulated Face Verification
 
-Verify user with given userId(begins with 'usr_'), an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+Verify user with given userId(begins with 'usr_'), and an optional boolean to enable liveness detection.
 
 ```java
-myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, 2, new JsonHttpResponseHandler() {...});
+myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, new JsonHttpResponseHandler() {...});
 ```
 
 #### Encapsulated Face Identification
 
-Identify user from given groupId(begins with 'grp_'), an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+Identify user from given groupId(begins with 'grp_'), and an optional boolean to enable liveness detection.
 
 ```java
-myVoiceIt.encapsulatedFaceIdentification(Activity, "GROUP_ID_HERE", true, 2, new JsonHttpResponseHandler() {...});
+myVoiceIt.encapsulatedFaceIdentification(Activity, "GROUP_ID_HERE", true, new JsonHttpResponseHandler() {...});
 ```
 
 #### Encapsulated Video Enrollment
@@ -193,18 +193,18 @@ myVoiceIt.encapsulatedVideoEnrollment(Activity, "USER_ID_HERE", "CONTENT_LANGUAG
 
 #### Encapsulated Video Verification
 
-Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection.
 
 ```java
-myVoiceIt.encapsulatedVideoVerification(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, 2, new JsonHttpResponseHandler() {...});
+myVoiceIt.encapsulatedVideoVerification(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, new JsonHttpResponseHandler() {...});
 ```
 
 #### Encapsulated Video Identification
 
-Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection and number of liveness checks(2 Recommended).
+Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and an optional boolean to enable liveness detection.
 
 ```java
-myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, 2, new JsonHttpResponseHandler() {...});
+myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, new JsonHttpResponseHandler() {...});
 ```
 
 ### User API Calls
