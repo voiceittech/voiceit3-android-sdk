@@ -35,11 +35,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
-        myVoiceIt.mDisplayPreviewFrame = true;
 
         userIdSwitch = findViewById(R.id.switch_user);
         livenessSwitch = findViewById(R.id.switch_liveness);
-        userIdSwitch.setText("User 1 ");
+        userIdSwitch.setText("User 1");
     }
 
     public void toggleLiveness(View view) {
