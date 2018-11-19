@@ -1,6 +1,6 @@
 <img src="Graphics/android.png" width="100%" style="width:100%">
 
-# VoiceIt 2 Android SDK
+# VoiceIt 2 Android SDK ![travisstatus](https://travis-ci.org/voiceittech/VoiceItApi2AndroidSDK.svg?branch=master)
 
 A fully comprehensive SDK that gives you access to the VoiceIt's New VoiceIt API 2.0 featuring Voice + Face Verification and Identification right in your Android app.
 
