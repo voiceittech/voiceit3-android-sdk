@@ -165,15 +165,7 @@ public class VoiceItAPI2 {
         try{
             final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
             final MediaRecorder myRecorder = new MediaRecorder();
-            myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            myRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-            myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-            myRecorder.setAudioSamplingRate(44100);
-            myRecorder.setAudioChannels(1);
-            myRecorder.setAudioEncodingBitRate(16000);
-            myRecorder.setOutputFile(recordingFile.getAbsolutePath());
-            myRecorder.prepare();
-            myRecorder.start();
+            Utils.startMediaRecorder(myRecorder, recordingFile);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -425,15 +417,7 @@ public class VoiceItAPI2 {
         try{
             final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
             final MediaRecorder myRecorder = new MediaRecorder();
-            myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            myRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-            myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-            myRecorder.setAudioSamplingRate(44100);
-            myRecorder.setAudioChannels(1);
-            myRecorder.setAudioEncodingBitRate(16000);
-            myRecorder.setOutputFile(recordingFile.getAbsolutePath());
-            myRecorder.prepare();
-            myRecorder.start();
+            Utils.startMediaRecorder(myRecorder, recordingFile);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -606,15 +590,7 @@ public class VoiceItAPI2 {
         try{
             final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
             final MediaRecorder myRecorder = new MediaRecorder();
-            myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            myRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-            myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-            myRecorder.setAudioSamplingRate(44100);
-            myRecorder.setAudioChannels(1);
-            myRecorder.setAudioEncodingBitRate(16000);
-            myRecorder.setOutputFile(recordingFile.getAbsolutePath());
-            myRecorder.prepare();
-            myRecorder.start();
+            Utils.startMediaRecorder(myRecorder, recordingFile);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {

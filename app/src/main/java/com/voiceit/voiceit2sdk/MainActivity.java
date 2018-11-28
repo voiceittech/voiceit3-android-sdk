@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // If using user tokens, replace API_KEY below with the user token,
+        // and leave the second argument as an empty string
         myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
 
         userIdSwitch = findViewById(R.id.switch_user);
