@@ -95,9 +95,22 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                 recordVoice();
             }
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
                 if (errorResponse != null) {
-                    exitViewWithJSON("voiceit-failure", errorResponse);
+                    try {
+                        // Report error to user
+                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(errorResponse.
+                                getString("responseCode"), "string", getPackageName()))));
+                    } catch (JSONException e) {
+                        Log.d(mTAG,"JSON exception : " + e.toString());
+                    }
+                    // Wait for 2.0 seconds
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            exitViewWithJSON("voiceit-failure", errorResponse);
+                        }
+                    }, 2000);
                 } else {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));

@@ -84,8 +84,6 @@ public class CameraSourcePreview extends ViewGroup {
 
     private void startIfReady() throws IOException {
         if (mStartRequested && mSurfaceAvailable) {
-            mCameraSource.start(mSurfaceView.getHolder());
-            mStartRequested = false;
 
             Camera mCamera = getCamera(mCameraSource);
             if(mCamera != null) {
@@ -113,6 +111,9 @@ public class CameraSourcePreview extends ViewGroup {
                 }
 
             }
+
+            mCameraSource.start(mSurfaceView.getHolder());
+            mStartRequested = false;
         }
     }
 

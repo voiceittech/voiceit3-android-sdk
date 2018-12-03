@@ -2,10 +2,8 @@ package com.voiceit.voiceit2;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -17,19 +15,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import cz.msebera.android.httpclient.Header;
 
@@ -96,9 +90,9 @@ public class FaceEnrollmentView extends AppCompatActivity {
     private void startEnrollmentFlow() {
         mContinueEnrolling = true;
         // Try to setup camera source
-        createCameraSource();
+        mCameraSource = Utils.createCameraSource(this, new FaceTrackerFactory(this));
         // Try to start camera
-        startCameraSource();
+        Utils.startCameraSource(this, mCameraSource, mPreview);
 
         // Delete enrollments and re-enroll
         mVoiceIt2.deleteAllEnrollments(mUserId, new JsonHttpResponseHandler() {
@@ -109,9 +103,22 @@ public class FaceEnrollmentView extends AppCompatActivity {
                 FaceTracker.continueDetecting = true;
             }
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
                 if (errorResponse != null) {
-                    exitViewWithJSON("voiceit-failure", errorResponse);
+                    try {
+                        // Report error to user
+                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(errorResponse.
+                                getString("responseCode"), "string", getPackageName()))));
+                    } catch (JSONException e) {
+                        Log.d(mTAG,"JSON exception : " + e.toString());
+                    }
+                    // Wait for 2.0 seconds
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            exitViewWithJSON("voiceit-failure", errorResponse);
+                        }
+                    }, 2000);
                 } else {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
@@ -125,80 +132,6 @@ public class FaceEnrollmentView extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    /**
-     * Creates and starts the camera.
-     */
-    private void createCameraSource() {
-
-        Context context = getApplicationContext();
-        FaceDetector detector = new FaceDetector.Builder(context)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setMode(FaceDetector.ACCURATE_MODE)
-                .setProminentFaceOnly(true)
-                .build();
-
-        detector.setProcessor(
-                new MultiProcessor.Builder<>(new FaceTrackerFactory(this))
-                        .build());
-
-        if (!detector.isOperational()) {
-            // Note: The first time that an app using face API is installed on a device, GMS will
-            // download a native library to the device in order to do detection.  Usually this
-            // completes before the app is run for the first time.  But if that download has not yet
-            // completed, then the above call will not detect any faces.
-            //
-            // isOperational() can be used to check if the required native library is currently
-            // available.  The detector will automatically become operational once the library
-            // download completes on device.
-            Log.w(mTAG, "Face detector dependencies are not yet available.");
-            Toast.makeText(this, "Downloading Face detector dependencies", Toast.LENGTH_LONG).show();
-            // Check for low storage.  If there is low storage, the native library will not be
-            // downloaded, so detection will not become operational.
-            IntentFilter lowStorageFilter = new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
-            boolean hasLowStorage = registerReceiver(null, lowStorageFilter) != null;
-
-            if (hasLowStorage) {
-                Toast.makeText(this, "Face detector dependencies cannot be downloaded due to low device storage", Toast.LENGTH_LONG).show();
-                Log.w(mTAG, "Face detector dependencies cannot be downloaded due to low device storage");
-            }
-        }
-
-        // Build camera source and attach detector
-        mCameraSource = new CameraSource.Builder(context, detector)
-                .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                .setRequestedFps(30.0f)
-                .build();
-
-    }
-
-    /**
-     * Starts or restarts the camera source, if it exists.  If the camera source doesn't exist yet
-     * (e.g., because onResume was called before the camera source was created), this will be called
-     * again when the camera source is created.
-     */
-    private void startCameraSource() {
-
-        // check that the device has play services available.
-        int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-                getApplicationContext());
-        if (code != ConnectionResult.SUCCESS) {
-            final int RC_HANDLE_GMS = 9001;
-            Dialog dlg =
-                    GoogleApiAvailability.getInstance().getErrorDialog(this, code, RC_HANDLE_GMS);
-            dlg.show();
-        }
-
-        if (mCameraSource != null) {
-            try {
-                mPreview.start(mCameraSource);
-            } catch (IOException e) {
-                Log.d(mTAG, "Unable to start camera source.", e);
-                mCameraSource.release();
-                mCameraSource = null;
-            }
-        }
     }
 
     /**
