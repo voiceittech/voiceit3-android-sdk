@@ -151,7 +151,9 @@ public class VoiceItAPI2 {
         try {
             params.put("recording", recording);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/enrollments/voice"), params, responseHandler);
@@ -169,20 +171,16 @@ public class VoiceItAPI2 {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    try{
-                        myRecorder.stop();
-                        myRecorder.reset();
-                        myRecorder.release();
-                        createVoiceEnrollment(userId, contentLanguage, phrase, recordingFile, responseHandler);
-                    } catch(Exception ex){
-                         Log.d(mTAG,"Exception Error:"+ex.getMessage());
-                    }
+                    myRecorder.stop();
+                    myRecorder.reset();
+                    myRecorder.release();
+                    createVoiceEnrollment(userId, contentLanguage, phrase, recordingFile, responseHandler);
                 }
             }, 4800);
         }
-        catch(Exception ex)
-        {
-             Log.d(mTAG,"Recording Error:" + ex.getMessage());
+        catch (Exception ex) {
+            Log.e(mTAG,"Recording Exception: " + ex.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
         }
     }
 
@@ -214,7 +212,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/enrollments/face"), params, responseHandler);
@@ -234,7 +234,9 @@ public class VoiceItAPI2 {
         try {
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/enrollments/face"), params, responseHandler);
@@ -265,7 +267,9 @@ public class VoiceItAPI2 {
             params.put("audio", audio);
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/enrollments/video"), params, responseHandler);
@@ -287,7 +291,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/enrollments/video"), params, responseHandler);
@@ -404,7 +410,9 @@ public class VoiceItAPI2 {
         try {
             params.put("recording", recording);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
         client.post(getAbsoluteUrl("/verification/voice"), params, responseHandler);
     }
@@ -421,20 +429,16 @@ public class VoiceItAPI2 {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    try{
-                        myRecorder.stop();
-                        myRecorder.reset();
-                        myRecorder.release();
-                        voiceVerification(userId, contentLanguage, phrase, recordingFile, responseHandler);
-                    } catch(Exception ex){
-                         Log.d(mTAG,"Exception Error:"+ex.getMessage());
-                    }
+                myRecorder.stop();
+                myRecorder.reset();
+                myRecorder.release();
+                voiceVerification(userId, contentLanguage, phrase, recordingFile, responseHandler);
                 }
             }, 4800);
         }
-        catch(Exception ex)
-        {
-             Log.d(mTAG,"Recording Error:" + ex.getMessage());
+        catch (Exception ex) {
+            Log.e(mTAG,"Recording Error: " + ex.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
         }
     }
 
@@ -466,7 +470,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/verification/face"), params, responseHandler);
@@ -487,7 +493,9 @@ public class VoiceItAPI2 {
         try {
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/verification/face"), params, responseHandler);
@@ -521,7 +529,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/verification/video"), params, responseHandler);
@@ -540,7 +550,9 @@ public class VoiceItAPI2 {
             params.put("audio", audio);
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/verification/video"), params, responseHandler);
@@ -576,7 +588,9 @@ public class VoiceItAPI2 {
         try {
             params.put("recording", recording);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/identification/voice"), params, responseHandler);
@@ -594,20 +608,16 @@ public class VoiceItAPI2 {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        myRecorder.stop();
-                        myRecorder.reset();
-                        myRecorder.release();
-                        voiceIdentification(groupId, contentLanguage, phrase, recordingFile, responseHandler);
-                    } catch (Exception ex) {
-                         Log.d(mTAG,"Exception Error:" + ex.getMessage());
-                    }
+                    myRecorder.stop();
+                    myRecorder.reset();
+                    myRecorder.release();
+                    voiceIdentification(groupId, contentLanguage, phrase, recordingFile, responseHandler);
                 }
             }, 4800);
         }
-        catch(Exception ex)
-        {
-             Log.d(mTAG,"Recording Error:" + ex.getMessage());
+        catch (Exception ex) {
+            Log.e(mTAG,"Recording Exception:" + ex.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
         }
     }
 
@@ -641,7 +651,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/identification/video"), params, responseHandler);
@@ -664,7 +676,9 @@ public class VoiceItAPI2 {
             params.put("audio", audio);
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/identification/video"), params, responseHandler);
@@ -698,7 +712,9 @@ public class VoiceItAPI2 {
         try {
             params.put("video", video);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
@@ -718,7 +734,9 @@ public class VoiceItAPI2 {
         try {
             params.put("photo", photo);
         } catch (FileNotFoundException e) {
-            Log.d("error: ", "FileNotFoundException: " + e.getMessage());
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
         }
 
         client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
@@ -970,7 +988,7 @@ public class VoiceItAPI2 {
         if (!id.matches("[A-Za-z0-9]+")
                 || !arg.substring(0, 3).equals("usr")
                 || id.length() != 32) {
-             Log.d(mTAG,"UserId does not meet requirements, " +
+             Log.e(mTAG,"UserId does not meet requirements, " +
                      "please ensure it is your user's 36 character alphanumeric string generated " +
                      "from the createUser API call");
             return false;
@@ -983,7 +1001,7 @@ public class VoiceItAPI2 {
         if (!id.matches("[A-Za-z0-9]+")
                 || !arg.substring(0, 3).equals("grp")
                 || id.length() != 32) {
-             Log.d(mTAG,"GroupId does not meet requirements, " +
+             Log.e(mTAG,"GroupId does not meet requirements, " +
                      "please ensure it is your group's 36 character alphanumeric string generated " +
                      "from the createGroup API call");
             return false;
@@ -995,8 +1013,8 @@ public class VoiceItAPI2 {
         JSONObject json = new JSONObject();
         try {
             json.put("message", "Incorrectly formatted id argument. Check log output for more information");
-        } catch(JSONException e) {
-            Log.d(mTAG,"JSON Exception : " + e.getMessage());
+        } catch (JSONException e) {
+            Log.e(mTAG,"JSON Exception : " + e.getMessage());
         }
         return json;
     }
