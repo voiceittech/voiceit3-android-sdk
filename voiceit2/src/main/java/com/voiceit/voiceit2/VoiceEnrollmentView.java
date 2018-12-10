@@ -25,7 +25,7 @@ import java.io.File;
 
 import cz.msebera.android.httpclient.Header;
 
-class VoiceEnrollmentView extends AppCompatActivity {
+public class VoiceEnrollmentView extends AppCompatActivity {
 
     private final String mTAG = "VoiceEnrollmentView";
     private Context mContext;

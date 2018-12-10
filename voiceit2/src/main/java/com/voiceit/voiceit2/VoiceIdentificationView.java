@@ -26,7 +26,7 @@ import java.io.File;
 
 import cz.msebera.android.httpclient.Header;
 
-class VoiceIdentificationView extends AppCompatActivity {
+public class VoiceIdentificationView extends AppCompatActivity {
 
     private final String mTAG = "VoiceIdentificationView";
     private Context mContext;

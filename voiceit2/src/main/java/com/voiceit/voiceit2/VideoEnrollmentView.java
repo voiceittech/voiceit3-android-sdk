@@ -31,7 +31,7 @@ import cz.msebera.android.httpclient.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class VideoEnrollmentView extends AppCompatActivity {
+public class VideoEnrollmentView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;

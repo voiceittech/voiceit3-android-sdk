@@ -32,7 +32,7 @@ import java.io.IOException;
 
 import cz.msebera.android.httpclient.Header;
 
-class FaceIdentificationView extends AppCompatActivity {
+public class FaceIdentificationView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;

@@ -84,6 +84,8 @@ class CameraSourcePreview extends ViewGroup {
 
     private void startIfReady() throws IOException {
         if (mStartRequested && mSurfaceAvailable) {
+            mCameraSource.start(mSurfaceView.getHolder());
+            mStartRequested = false;
 
             Camera mCamera = getCamera(mCameraSource);
             if(mCamera != null) {
@@ -109,11 +111,8 @@ class CameraSourcePreview extends ViewGroup {
                 if (previewWidth == -1 || previewHeight == -1) {
                     requestLayout();
                 }
-
             }
 
-            mCameraSource.start(mSurfaceView.getHolder());
-            mStartRequested = false;
         }
     }
 
@@ -124,7 +123,7 @@ class CameraSourcePreview extends ViewGroup {
             try {
                 startIfReady();
             } catch (IOException e) {
-                Log.e(mTAG, "Could not start camera source:", e);
+                Log.e(mTAG, "Could not start camera source: ", e);
             }
         }
 
@@ -193,6 +192,7 @@ class CameraSourcePreview extends ViewGroup {
         for (int i = 0; i < getChildCount(); ++i) {
             getChildAt(i).layout(0, 0, childWidth, childHeight);
         }
+
 
     }
 

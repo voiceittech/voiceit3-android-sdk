@@ -32,7 +32,7 @@ import java.io.IOException;
 
 import cz.msebera.android.httpclient.Header;
 
-class VideoIdentificationView extends AppCompatActivity {
+public class VideoIdentificationView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;

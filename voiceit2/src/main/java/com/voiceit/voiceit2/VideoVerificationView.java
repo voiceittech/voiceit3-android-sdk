@@ -31,7 +31,7 @@ import cz.msebera.android.httpclient.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class VideoVerificationView extends AppCompatActivity {
+public class VideoVerificationView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;

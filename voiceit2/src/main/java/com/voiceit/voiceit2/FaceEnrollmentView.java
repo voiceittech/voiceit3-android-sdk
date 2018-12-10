@@ -30,7 +30,7 @@ import cz.msebera.android.httpclient.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class FaceEnrollmentView extends AppCompatActivity {
+public class FaceEnrollmentView extends AppCompatActivity {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
@@ -85,7 +85,7 @@ class FaceEnrollmentView extends AppCompatActivity {
         } else {
             setRequestedOrientation(Utils.lockOrientationCode(getWindowManager().getDefaultDisplay().getRotation()));
         }
-}
+    }
 
     private void startEnrollmentFlow() {
         mContinueEnrolling = true;
@@ -329,6 +329,7 @@ class FaceEnrollmentView extends AppCompatActivity {
     private void enrollUserFace() {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.progressCircle));
         mOverlay.setProgressCircleAngle(270, 359);
+
         mVoiceIt2.createFaceEnrollmentWithPhoto(mUserId, mPictureFile, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
