@@ -106,61 +106,64 @@ public class VideoIdentificationView extends AppCompatActivity {
         // Try to setup camera source
         mCameraSource = Utils.createCameraSource(this, new FaceTrackerFactory(this));
         // Try to start camera
-        Utils.startCameraSource(this, mCameraSource, mPreview);
+        if(!Utils.startCameraSource(this, mCameraSource, mPreview)){
+            exitViewWithMessage("voiceit-failure","Error starting camera");
+        } else {
+            mVoiceIt2.getGroup(mGroupId, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, final JSONObject Response) {
+                    try {
+                        // Check If enough enrollments, otherwise return to previous activity
+                        if (Response.getJSONArray("users").length() < mNeededUsers) {
+                            mOverlay.updateDisplayText(getString(R.string.NOT_ENOUGH_ENROLLMENTS));
+                            // Wait for ~2.5 seconds
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    exitViewWithMessage("voiceit-failure", "Not enough users in group");
+                                }
+                            }, 2500);
+                        } else {
+                            mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
+                            // Start tracking faces
+                            FaceTracker.continueDetecting = true;
+                        }
+                    } catch (JSONException e) {
+                        Log.d(mTAG, "JSON exception : " + e.toString());
+                    }
+                }
 
-        mVoiceIt2.getGroup(mGroupId, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, final JSONObject Response) {
-                try {
-                    // Check If enough enrollments, otherwise return to previous activity
-                    if (Response.getJSONArray("users").length() < mNeededUsers) {
-                        mOverlay.updateDisplayText(getString(R.string.NOT_ENOUGH_ENROLLMENTS));
-                        // Wait for ~2.5 seconds
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
+                    if (errorResponse != null) {
+                        try {
+                            // Report error to user
+                            mOverlay.updateDisplayText(getString((getResources().getIdentifier(errorResponse.
+                                    getString("responseCode"), "string", getPackageName()))));
+                        } catch (JSONException e) {
+                            Log.d(mTAG, "JSON exception : " + e.toString());
+                        }
+                        // Wait for 2.0 seconds
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                exitViewWithMessage("voiceit-failure", "Not enough users in group");
+                                exitViewWithJSON("voiceit-failure", errorResponse);
                             }
-                        }, 2500);
+                        }, 2000);
                     } else {
-                        mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
-                        // Start tracking faces
-                        FaceTracker.continueDetecting = true;
+                        Log.e(mTAG, "No response from server");
+                        mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
+                        // Wait for 2.0 seconds
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                exitViewWithMessage("voiceit-failure", "No response from server");
+                            }
+                        }, 2000);
                     }
-                } catch (JSONException e) {
-                    Log.d(mTAG,"JSON exception : " + e.toString());
                 }
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
-                if (errorResponse != null) {
-                    try {
-                        // Report error to user
-                        mOverlay.updateDisplayText(getString((getResources().getIdentifier(errorResponse.
-                                getString("responseCode"), "string", getPackageName()))));
-                    } catch (JSONException e) {
-                        Log.d(mTAG,"JSON exception : " + e.toString());
-                    }
-                    // Wait for 2.0 seconds
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exitViewWithJSON("voiceit-failure", errorResponse);
-                        }
-                    }, 2000);
-                } else {
-                    Log.e(mTAG, "No response from server");
-                    mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
-                    // Wait for 2.0 seconds
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exitViewWithMessage("voiceit-failure","No response from server");
-                        }
-                    }, 2000);
-                }
-            }
-        });
+            });
+        }
     }
 
     /**

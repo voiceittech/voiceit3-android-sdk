@@ -54,7 +54,7 @@ class Utils {
         try {
             mediaRecorder.prepare();
         } catch (IOException e) {
-            Log.e(mTAG, "mMediaRecorder prepare failed");
+            Log.e(mTAG, "MediaRecorder prepare failed");
         }
         mediaRecorder.start();
     }
@@ -79,9 +79,9 @@ class Utils {
      * (e.g., because onResume was called before the camera source was created), this will be called
      * again when the camera source is created.
      */
-    static void startCameraSource(Activity activity, CameraSource cameraSource, CameraSourcePreview preview) {
+    static boolean startCameraSource(Activity activity, CameraSource cameraSource, CameraSourcePreview preview) {
 
-        // check that the device has play services available.
+        // Check that the device has play services available.
         int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(activity);
         if (code != ConnectionResult.SUCCESS) {
             final int RC_HANDLE_GMS = 9001;
@@ -96,9 +96,10 @@ class Utils {
             } catch (IOException e) {
                 Log.d(mTAG, "Unable to start camera source.", e);
                 cameraSource.release();
-                cameraSource = null;
+                return false;
             }
         }
+        return  true;
     }
 
     /**
