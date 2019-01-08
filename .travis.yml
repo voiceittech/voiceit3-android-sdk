@@ -39,7 +39,7 @@ script:
     - ./gradlew -Pandroid.testInstrumentationRunnerArguments.key=$VIAPIKEY -Pandroid.testInstrumentationRunnerArguments.tok=$VIAPITOKEN connectedAndroidTest
 
 after_success:
-  - ./update.sh
+  - ./release.sh
   - ./email.sh
 
 before_cache:
