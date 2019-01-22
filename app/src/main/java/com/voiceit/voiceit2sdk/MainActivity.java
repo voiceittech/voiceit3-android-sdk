@@ -18,7 +18,7 @@ import com.voiceit.voiceit2.VoiceItAPI2;
 public class MainActivity extends AppCompatActivity {
 
     private VoiceItAPI2 myVoiceIt;
-    private String [] userId = {"USER_ID_!", "USER_ID_2"};
+    private String [] userId = {"USER_ID_1", "USER_ID_2"};
     private int userIdIndex = 0;
     private String groupId = "GROUP_ID";
     private String phrase = "Never forget tomorrow is a new day";

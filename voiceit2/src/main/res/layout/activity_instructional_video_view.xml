@@ -12,6 +12,7 @@
         android:id="@+id/instruction_gif"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/common_google_signin_btn_text_dark_focused"
         android:src="@raw/android_video_verification" />
 
     <ImageButton
@@ -21,7 +22,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="192dp"
         android:layout_marginEnd="8dp"
-        android:background="@color/common_google_signin_btn_text_dark_focused"
+        android:background="@color/portraitBackground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
