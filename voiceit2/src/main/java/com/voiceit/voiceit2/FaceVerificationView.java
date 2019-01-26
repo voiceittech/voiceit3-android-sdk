@@ -310,38 +310,39 @@ public class FaceVerificationView extends AppCompatActivity {
         }
     }
 
-    // Verify after taking picture
-    final CameraSource.PictureCallback mPictureCallback = new CameraSource.PictureCallback() {
-        @Override
-        public void onPictureTaken(byte[] data) {
-            // Check file
-            if (mPictureFile == null) {
-                Log.d(mTAG, "Error creating media file, check storage permissions");
-                return;
-            }
-            // Write picture to file
-            try {
-                FileOutputStream fos = new FileOutputStream(mPictureFile);
-                fos.write(data);
-                fos.close();
-            } catch (FileNotFoundException e) {
-                Log.d(mTAG, "File not found: " + e.getMessage());
-            } catch (IOException e) {
-                Log.d(mTAG, "Error accessing file: " + e.getMessage());
-            }
-
-            // With liveness checks enabled, a picture is taken before it is done
-            // and verify is called later
-            if(!mDoLivenessCheck) {
-                verifyUserFace();
-            } else {
-                // Continue liveness detection
-                FaceTracker.continueDetecting = true;
-            }
-        }
-    };
-
     private void takePicture() {
+
+        // Verify after taking picture
+        final CameraSource.PictureCallback mPictureCallback = new CameraSource.PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] data) {
+                // Check file
+                if (mPictureFile == null) {
+                    Log.d(mTAG, "Error creating media file, check storage permissions");
+                    return;
+                }
+                // Write picture to file
+                try {
+                    FileOutputStream fos = new FileOutputStream(mPictureFile);
+                    fos.write(data);
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    Log.d(mTAG, "File not found: " + e.getMessage());
+                } catch (IOException e) {
+                    Log.d(mTAG, "Error accessing file: " + e.getMessage());
+                }
+
+                // With liveness checks enabled, a picture is taken before it is done
+                // and verify is called later
+                if(!mDoLivenessCheck) {
+                    verifyUserFace();
+                } else {
+                    // Continue liveness detection
+                    FaceTracker.continueDetecting = true;
+                }
+            }
+        };
+
         try {
             // Take picture of face
             mCameraSource.takePicture(null, mPictureCallback);
