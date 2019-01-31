@@ -110,7 +110,7 @@ public class VideoEnrollmentView extends AppCompatActivity {
             exitViewWithMessage("voiceit-failure","Error starting camera");
         } else {
             // Delete enrollments and re-enroll
-            mVoiceIt2.deleteAllEnrollments(mUserId, new JsonHttpResponseHandler() {
+            mVoiceIt2.deleteAllVideoEnrollments(mUserId, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject Response) {
                     mOverlay.updateDisplayText(getString(R.string.LOOK_INTO_CAM));
