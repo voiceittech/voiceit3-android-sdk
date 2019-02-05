@@ -1,6 +1,7 @@
 package com.voiceit.voiceit2;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -388,7 +389,7 @@ class RadiusOverlayView extends LinearLayout {
         }
     }
 
-    public boolean insidePortraitCircle(Face face) {
+    public boolean insidePortraitCircle(Activity activity, Face face) {
 
         final float faceX = (float)mViewWidth - (face.getPosition().x + face.getWidth() / 2)
                 * (float)mViewWidth / (float)CameraSourcePreview.previewWidth;
@@ -397,6 +398,19 @@ class RadiusOverlayView extends LinearLayout {
 
         final float radius = circleRadius * 0.7f;
 
+        // Face close enough to camera
+        if(face.getWidth() < (circleRadius/2)
+                || face.getHeight() < (circleRadius/2)) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateDisplayText(getContext().getString(R.string.MOVE_CLOSER));
+                }
+            });
+            return false;
+        }
+
+        // Face inside portrait circle
         return (faceX < circleCenterX + radius
                 && faceX > circleCenterX - radius
                 && faceY < circleCenterY + radius

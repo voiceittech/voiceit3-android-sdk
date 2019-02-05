@@ -28,6 +28,7 @@
     <string name="FAILED_LIVENESS">Failed liveness detection</string>
     <string name="FAILED_LIVENESS_CHALLENGE">Failed liveness challenge, please try again.</string>
     <string name="FAILED_PRECHECK">Please wait to be prompted before taking action.</string>
+    <string name="MOVE_CLOSER">Please move closer to the camera</string>
 
     <string name="FNFD">Sorry, we couldn\'t quite see your face. Please try again.</string>
     <string name="DDNE">Sorry, something went wrong.Please try again.</string>

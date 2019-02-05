@@ -271,7 +271,7 @@ class FaceTracker extends Tracker<Face> {
         if (FaceTracker.continueDetecting) {
             final int numFaces = detectionResults.getDetectedItems().size();
 
-            if (numFaces == 1 && mOverlay.insidePortraitCircle(face)) {
+            if (numFaces == 1 && mOverlay.insidePortraitCircle(mActivity, face)) {
                 FaceTracker.lookingAway = false;
 
                 // Success or skip liveness detection
