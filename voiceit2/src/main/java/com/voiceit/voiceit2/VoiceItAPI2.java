@@ -774,6 +774,7 @@ public class VoiceItAPI2 {
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
     }
@@ -793,6 +794,7 @@ public class VoiceItAPI2 {
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
     }
@@ -812,6 +814,7 @@ public class VoiceItAPI2 {
         bundle.putString("phrase", phrase);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
     }
@@ -832,6 +835,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 
@@ -861,6 +865,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 
@@ -890,6 +895,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 
@@ -910,6 +916,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 
@@ -937,6 +944,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 
@@ -964,6 +972,7 @@ public class VoiceItAPI2 {
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
 
         broadcastMessageHandler(activity, responseHandler);
 

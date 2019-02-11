@@ -261,6 +261,7 @@ public class FaceIdentificationView extends AppCompatActivity {
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
+        overridePendingTransition(0, 0);
     }
 
     private void exitViewWithJSON(String action, JSONObject json) {
@@ -272,6 +273,7 @@ public class FaceIdentificationView extends AppCompatActivity {
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
+        overridePendingTransition(0, 0);
     }
 
     @Override
