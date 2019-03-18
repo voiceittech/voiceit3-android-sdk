@@ -32,7 +32,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
 
     private RadiusOverlayView mOverlay;
     private MediaRecorder mMediaRecorder = null;
-    private final Handler handler = new Handler();
+    private final Handler timingHandler = new Handler();
 
     private VoiceItAPI2 mVoiceIt2;
     private String mUserId = "";
@@ -106,7 +106,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                         Log.d(mTAG,"JSON exception : " + e.toString());
                     }
                     // Wait for 2.0 seconds
-                    handler.postDelayed(new Runnable() {
+                    timingHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             exitViewWithJSON("voiceit-failure", errorResponse);
@@ -116,7 +116,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
                     // Wait for 2.0 seconds
-                    handler.postDelayed(new Runnable() {
+                    timingHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             exitViewWithMessage("voiceit-failure","No response from server");
@@ -168,7 +168,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
     private void exitViewWithMessage(String action, String message) {
         mContinueEnrolling = false;
         stopRecording();
-        handler.removeCallbacksAndMessages(null);
+        timingHandler.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
         try {
@@ -185,7 +185,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
     private void exitViewWithJSON(String action, JSONObject json) {
         mContinueEnrolling = false;
         stopRecording();
-        handler.removeCallbacksAndMessages(null);
+        timingHandler.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -231,7 +231,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
         mOverlay.updateDisplayText(getString(R.string.ENROLL_FAIL));
 
         // Wait for ~1.5 seconds
-        handler.postDelayed(new Runnable() {
+        timingHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -247,7 +247,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                     Log.d(mTAG, "JSON exception : " + e.toString());
                 }
                 // Wait for ~4.5 seconds
-                handler.postDelayed(new Runnable() {
+                timingHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         mFailedAttempts++;
@@ -256,7 +256,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                         if (mFailedAttempts > mMaxFailedAttempts) {
                             mOverlay.updateDisplayText(getString(R.string.TOO_MANY_ATTEMPTS));
                             // Wait for ~2 seconds then exit
-                            handler.postDelayed(new Runnable() {
+                            timingHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     exitViewWithJSON("voiceit-failure", response);
@@ -318,7 +318,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
 
                 // Record and update amplitude display for ~5 seconds, then send data
                 // 4800ms to make sure recording is not over 5 seconds
-                handler.postDelayed(new Runnable() {
+                timingHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
 
@@ -340,7 +340,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                                             mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
                                             mOverlay.updateDisplayText(getString(R.string.ENROLL_SUCCESS));
                                             // Wait for ~2 seconds
-                                            handler.postDelayed(new Runnable() {
+                                            timingHandler.postDelayed(new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     audioFile.deleteOnExit();
@@ -349,7 +349,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                                                     if (mEnrollmentCount == mNeededEnrollments) {
                                                         mOverlay.updateDisplayText(getString(R.string.ALL_ENROLL_SUCCESS));
                                                         // Wait for ~2.5 seconds
-                                                        handler.postDelayed(new Runnable() {
+                                                        timingHandler.postDelayed(new Runnable() {
                                                             @Override
                                                             public void run() {
                                                                 exitViewWithJSON("voiceit-success", response);
@@ -383,7 +383,7 @@ public class VoiceEnrollmentView extends AppCompatActivity {
                                         Log.e(mTAG, "No response from server");
                                         mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
                                         // Wait for 2.0 seconds
-                                        handler.postDelayed(new Runnable() {
+                                        timingHandler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
                                                 exitViewWithMessage("voiceit-failure", "No response from server");

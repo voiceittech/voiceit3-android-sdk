@@ -33,7 +33,7 @@ class FaceTracker extends Tracker<Face> {
 
     static int livenessChallengesPassed = 0;
     static int livenessChallengeFails = 0;
-    private static double faceTurnedValue = 18.0;
+    private static final double faceTurnedValue = 18.0;
     private boolean mDisplayingChallenge = false;
     private boolean mDisplayingChallengeOutcome = false;
     private boolean mTimingLiveness = false;

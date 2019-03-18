@@ -7,6 +7,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,12 +37,12 @@ import java.io.IOException;
 
 import cz.msebera.android.httpclient.Header;
 
-public class FaceIdentificationView extends AppCompatActivity {
+public class FaceIdentificationView extends AppCompatActivity implements SensorEventListener {
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
     private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
-    private final Handler handler = new Handler();
+    private final Handler timingHandler = new Handler();
 
     private final String mTAG = "FaceIdentificationView";
     private Context mContext;
@@ -57,6 +61,9 @@ public class FaceIdentificationView extends AppCompatActivity {
     private int mFailedAttempts = 0;
     private final int mMaxFailedAttempts = 3;
     private boolean mContinueIdentifying = false;
+
+    private SensorManager sensorManager = null;
+    private Sensor lightSensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +111,12 @@ public class FaceIdentificationView extends AppCompatActivity {
             setRequestedOrientation(Utils.lockOrientationCode(getWindowManager().getDefaultDisplay().getRotation()));
         }
 
+        PackageManager pm = getPackageManager();
+        if (pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_LIGHT)) {
+            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        }
+
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor prefEditor = sharedPref.edit();
         playInstructionalVideo = sharedPref.getBoolean("playInstructionalVideo", true);
@@ -136,7 +149,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                         if (Response.getJSONArray("users").length() < mNeededUsers) {
                             mOverlay.updateDisplayText(getString(R.string.MISU));
                             // Wait for ~2.5 seconds
-                            handler.postDelayed(new Runnable() {
+                            timingHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     exitViewWithMessage("voiceit-failure", "Not enough users in group");
@@ -163,7 +176,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                             Log.d(mTAG, "JSON exception : " + e.toString());
                         }
                         // Wait for 2.0 seconds
-                        handler.postDelayed(new Runnable() {
+                        timingHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 exitViewWithJSON("voiceit-failure", errorResponse);
@@ -173,7 +186,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                         Log.e(mTAG, "No response from server");
                         mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
                         // Wait for 2.0 seconds
-                        handler.postDelayed(new Runnable() {
+                        timingHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 exitViewWithMessage("voiceit-failure", "No response from server");
@@ -249,7 +262,7 @@ public class FaceIdentificationView extends AppCompatActivity {
     private void exitViewWithMessage(String action, String message) {
         Utils.setBrightness(this, Utils.oldBrightness);
         mContinueIdentifying = false;
-        handler.removeCallbacksAndMessages(null);
+        timingHandler.removeCallbacksAndMessages(null);
         FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
@@ -267,13 +280,26 @@ public class FaceIdentificationView extends AppCompatActivity {
     private void exitViewWithJSON(String action, JSONObject json) {
         Utils.setBrightness(this, Utils.oldBrightness);
         mContinueIdentifying = false;
-        handler.removeCallbacksAndMessages(null);
+        timingHandler.removeCallbacksAndMessages(null);
         FaceTracker.livenessTimer.removeCallbacksAndMessages(null);
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
         overridePendingTransition(0, 0);
+    }
+
+    @Override
+    public final void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    public final void onSensorChanged(SensorEvent event) {
+        float lux = event.values[0];
+        if(lux < Utils.luxThreshold) {
+            mOverlay.setLowLightMode(true);
+        } else {
+            mOverlay.setLowLightMode(false);
+        }
     }
 
     @Override
@@ -298,9 +324,20 @@ public class FaceIdentificationView extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if(sensorManager != null) {
+            sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         mPreview.stop();
+        if(sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
         if(mContinueIdentifying) {
             exitViewWithMessage("voiceit-failure", "User Canceled");
         }
@@ -364,7 +401,7 @@ public class FaceIdentificationView extends AppCompatActivity {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
         mOverlay.updateDisplayText(getString(R.string.IDENTIFY_FAIL));
         // Wait for ~1.5 seconds
-        handler.postDelayed(new Runnable() {
+        timingHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -375,7 +412,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                     Log.d(mTAG,"JSON exception : " + e.toString());
                 }
                 // Wait for ~4.5 seconds
-                handler.postDelayed(new Runnable() {
+                timingHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         mFailedAttempts++;
@@ -384,7 +421,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                         if (mFailedAttempts >= mMaxFailedAttempts) {
                             mOverlay.updateDisplayText(getString(R.string.TOO_MANY_ATTEMPTS));
                             // Wait for ~2 seconds
-                            handler.postDelayed(new Runnable() {
+                            timingHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     exitViewWithJSON("voiceit-failure", response);
@@ -421,7 +458,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                         mOverlay.updateDisplayText(getString(R.string.IDENTIFY_SUCCESS));
 
                         // Wait for ~2 seconds
-                        handler.postDelayed(new Runnable() {
+                        timingHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 mPictureFile.deleteOnExit();
@@ -447,7 +484,7 @@ public class FaceIdentificationView extends AppCompatActivity {
                     Log.e(mTAG, "No response from server");
                     mOverlay.updateDisplayTextAndLock(getString(R.string.CHECK_INTERNET));
                     // Wait for 2.0 seconds
-                    handler.postDelayed(new Runnable() {
+                    timingHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             exitViewWithMessage("voiceit-failure", "No response from server");

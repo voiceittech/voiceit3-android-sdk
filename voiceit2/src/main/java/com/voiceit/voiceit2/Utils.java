@@ -28,13 +28,14 @@ import java.util.Random;
 class Utils {
     private static final String mTAG = "Utils";
     static int oldBrightness;
+    static float luxThreshold = 50.0f;
 
      /** Create a File for saving an image or audio file */
      static File getOutputMediaFile(String suffix){
         try {
             return File.createTempFile("tempfile", suffix);
         } catch (IOException e) {
-            Log.d(mTAG,"Creating file failed with exception : " + e.getMessage());
+            Log.e(mTAG,"Creating " + suffix + " file failed with exception : " + e.getMessage());
             return null;
         }
     }

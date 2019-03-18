@@ -34,10 +34,10 @@ public class VoiceItInstrumentedTest {
 
     final private String phrase = "Never forget tomorrow is a new day";
 
-    private ArrayList<String> userIds = new ArrayList<>();
+    private final ArrayList<String> userIds = new ArrayList<>();
     private String groupId = "";
-    private ArrayList<String> enrollmentIds = new ArrayList<>();
-    private ArrayList<String> faceEnrollmentIds = new ArrayList<>();
+    private final ArrayList<String> enrollmentIds = new ArrayList<>();
+    private final ArrayList<String> faceEnrollmentIds = new ArrayList<>();
 
     final private String dir = InstrumentationRegistry.getTargetContext().getFilesDir().getAbsolutePath();
 

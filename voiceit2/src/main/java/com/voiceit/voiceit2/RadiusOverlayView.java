@@ -56,7 +56,6 @@ class RadiusOverlayView extends LinearLayout {
     private final Paint progressCirclePaint = new Paint();
 
     private boolean mDrawWaveform = false;
-
     private float mWaveAmplitude = 0.0f;
     private float mWaveformMaxAmplitude;
     private final int mNumberOfWaves = 4;
@@ -138,6 +137,18 @@ class RadiusOverlayView extends LinearLayout {
             mWaveformPath = new Path();
         }
         attr.recycle();
+    }
+
+    void setLowLightMode(Boolean lowLightMode) {
+        if(lowLightMode) {
+            invertedCirclePaint.setColor(getResources().getColor(R.color.portraitBackgroundLowLight));
+            textPaint.setColor(getResources().getColor(R.color.instructionalTextLowLight));
+        } else {
+            invertedCirclePaint.setColor(getResources().getColor(R.color.portraitBackground));
+            textPaint.setColor(getResources().getColor(R.color.instructionalText));
+        }
+        this.invalidate();
+
     }
 
     private void setup() {
