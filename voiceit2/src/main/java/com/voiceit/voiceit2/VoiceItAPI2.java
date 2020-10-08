@@ -30,6 +30,7 @@ public class VoiceItAPI2 {
 
     private final String mTAG = "VoiceItAPI2";
     private String BASE_URL = "https://api.voiceit.io";
+    private String LIVENESS_URL = "https://liveness.voiceit.io";
 
     public boolean mDisplayPreviewFrame = false;
 
@@ -43,7 +44,7 @@ public class VoiceItAPI2 {
         this.client.addHeader("platformId", "40");
         this.client.addHeader("platformVersion", BuildConfig.VERSION_NAME);
     }
-
+    // TODO: add a constructor that also overrides the liveness URL constant
     public VoiceItAPI2(String apiKey, String apiToken, String url) {
         this.apiKey = apiKey;
         this.apiToken = apiToken;
@@ -62,6 +63,10 @@ public class VoiceItAPI2 {
 
     private String getAbsoluteUrl(String relativeUrl) {
         return BASE_URL + relativeUrl;
+    }
+
+    private String getAbsoluteLivenessUrl(String relativeUrl) {
+        return LIVENESS_URL + relativeUrl;
     }
 
     public void getPhrases(String contentLanguage, AsyncHttpResponseHandler responseHandler) {
@@ -130,6 +135,61 @@ public class VoiceItAPI2 {
             return;
         }
         client.get(getAbsoluteUrl("/enrollments/video/" + userId), responseHandler);
+    }
+
+    public void livenessInitialRequest(String userId, String contentLanguage, AsyncHttpResponseHandler responseHandler){
+        if(!userIdFormatted(userId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+        client.get(getAbsoluteLivenessUrl("/" + userId + "/" + contentLanguage), responseHandler);
+    }
+
+    public void processLivenessFace(String userId,  String phrase, String videoPath, String lcoId,  AsyncHttpResponseHandler responseHandler) {
+        processLivenessFace(userId, new File(videoPath), lcoId, responseHandler);
+    }
+
+    public void processLivenessFace(String userId, File video, String lcoId, AsyncHttpResponseHandler responseHandler) {
+        if(!userIdFormatted(userId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+        RequestParams params = new RequestParams();
+        params.put("userId", userId);
+        params.put("lcoId", lcoId);
+        try {
+            params.put("file", video);
+        } catch (FileNotFoundException e) {
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+
+        client.post(getAbsoluteLivenessUrl("/face"), params, responseHandler);
+    }
+
+    public void processLivenessVideo(String userId,  String phrase, String videoPath, String lcoId,  AsyncHttpResponseHandler responseHandler) {
+        processLivenessVideo(userId, phrase, new File(videoPath), lcoId, responseHandler);
+    }
+
+    public void processLivenessVideo(String userId, String phrase, File video, String lcoId, AsyncHttpResponseHandler responseHandler) {
+        if(!userIdFormatted(userId)) {
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+        RequestParams params = new RequestParams();
+        params.put("userId", userId);
+        params.put("lcoId", lcoId);
+        params.put("phrase", phrase);
+        try {
+            params.put("file", video);
+        } catch (FileNotFoundException e) {
+            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
+            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+            return;
+        }
+
+        client.post(getAbsoluteLivenessUrl("/video"), params, responseHandler);
     }
 
     public void createVoiceEnrollment(String userId, String contentLanguage, String phrase, String recordingPath, AsyncHttpResponseHandler responseHandler) {
