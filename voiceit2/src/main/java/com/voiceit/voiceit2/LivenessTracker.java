@@ -114,13 +114,23 @@ class LivenessTracker extends Tracker<Face> {
                 if(mediaPlayer.isPlaying()){
                     mediaPlayer.stop();
                 }
-                int resId = mActivity.getApplicationContext().getResources().getIdentifier(
-                        livenessPrompt,
-                        "raw",
-                        mActivity.getApplicationContext().getPackageName()
-                );
-                mediaPlayer = MediaPlayer.create(mActivity.getApplicationContext(), resId);
-                mediaPlayer.start();
+                if(mCountryCode == "es-ES"){
+                    int resId = mActivity.getApplicationContext().getResources().getIdentifier(
+                            livenessPrompt+"_es",
+                            "raw",
+                            mActivity.getApplicationContext().getPackageName()
+                    );
+                    mediaPlayer = MediaPlayer.create(mActivity.getApplicationContext(), resId);
+                    mediaPlayer.start();
+                } else{
+                    int resId = mActivity.getApplicationContext().getResources().getIdentifier(
+                            livenessPrompt,
+                            "raw",
+                            mActivity.getApplicationContext().getPackageName()
+                    );
+                    mediaPlayer = MediaPlayer.create(mActivity.getApplicationContext(), resId);
+                    mediaPlayer.start();
+                }
             }
         });
     }
