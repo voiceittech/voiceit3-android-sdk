@@ -45,6 +45,7 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
     private MediaRecorder mMediaRecorder = null;
     private final Handler timingHandler = new Handler();
+    private  File file;
 
     private final String mTAG = "VideoVerificationView";
     private Context mContext;
@@ -257,12 +258,12 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     }
 
     private void createFile() throws IOException {
-        File file = new File(this.getFilesDir() + "/" + File.separator + "video.mp4");
+        file = new File(this.getFilesDir() + "/" + File.separator + "video.mp4");
         file.createNewFile();
     }
 
-    private void startVerificationFlow() {
 
+    private void startVerificationFlow() {
         // get Live-nes Challenges and time
         if(mDoLivenessCheck) {
             getLivenessData();

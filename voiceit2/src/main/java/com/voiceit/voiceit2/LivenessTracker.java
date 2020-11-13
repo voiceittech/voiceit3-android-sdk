@@ -25,6 +25,7 @@ class LivenessTracker extends Tracker<Face> {
     private final RadiusOverlayView mOverlay;
     private final viewCallBacks mCallbacks;
 
+    private VoiceItAPI2 mVoiceIt2;
     private final String mTAG = "LivenessTracker";
 
     private final int [] mLivenessChallengeOrder;
@@ -170,7 +171,7 @@ class LivenessTracker extends Tracker<Face> {
                             public void run() {
                                 performLivenessTest();
                             }
-                        }, 4000);
+                        }, 3000);
                     }
                 });
             }
@@ -311,36 +312,61 @@ class LivenessTracker extends Tracker<Face> {
 
     private void performLivenessTest() {
         if(mScreenType.equals("face_verification")) {
+            //start recording
             startRecording();
+
+            //begin challenge
             beginChallenge();
 
+            //stop recording after challenge time
             long stop_time = (long)mChallengeTime;
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     stopRecording();
+                    sendVideoFile();
                 }
             }, stop_time*1000);
         }
 
         if(mScreenType.equals("video_verification")) {
-            // start recording
+            //start recording
+            startRecording();
+
+            //after challenge phrase for liveness
+            final Handler handler = new Handler();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     updateDisplayText(mActivity.getString(R.string.SAY_PASSPHRASE, mPhrase), true);
                     mOverlay.setProgressCircleColor(mActivity.getResources().getColor(R.color.progressCircle));
                     mOverlay.startDrawingProgressCircle();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            stopRecording();
+                            sendVideoFile();
+                        }
+                    }, 5000);
                 }
             }, (long)mChallengeTime * 1000);
+
+            //begin challenge
             beginChallenge();
-            // stop recording
         }
     }
 
-    private void illuminateCircles(String direction){
+    private void sendVideoFile() {
+        if(mScreenType.equals("face_verification")) {
+
+        } if(mScreenType.equals("video_verification")) {
+        }
+    }
+
+    // LCO Type and response type is converted to visual clue
+    private void illuminateCircles(String instruction){
         setProgressCircleColor(R.color.pendingLivenessSuccess);
-        switch (direction){
+        switch (instruction){
             case "face_left":
                 setProgressCircleAngle(135.0, 90.0);
                 break;
