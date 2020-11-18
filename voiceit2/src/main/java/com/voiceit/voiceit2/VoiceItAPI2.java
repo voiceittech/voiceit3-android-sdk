@@ -510,7 +510,7 @@ public class VoiceItAPI2 {
             return;
         }
 
-        client.post(getAbsoluteUrl("/verification/video"), params, responseHandler);
+        client.post(getAbsoluteUrl("/verification/face"), params, responseHandler);
     }
 
     public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
