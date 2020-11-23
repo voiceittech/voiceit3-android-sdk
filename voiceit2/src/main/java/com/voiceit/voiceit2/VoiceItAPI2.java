@@ -503,14 +503,14 @@ public class VoiceItAPI2 {
         params.put("lcoId", lcoId);
         params.put("contentLanguage", contentLanguage);
         try {
-            params.put("video", video);
+            params.put("file", video);
         } catch (FileNotFoundException e) {
             Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
 
-        client.post(getAbsoluteUrl("/verification/face"), params, responseHandler);
+        client.post(getAbsoluteLivenessUrl("/verification/face"), params, responseHandler);
     }
 
     public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
@@ -601,14 +601,15 @@ public class VoiceItAPI2 {
         params.put("phrase", phrase);
         params.put("lcoId", lcoId);
         try {
-            params.put("video", video);
+            params.put("file", video);
         } catch (FileNotFoundException e) {
             Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
             return;
         }
 
-        client.post(getAbsoluteUrl("/verification/video"), params, responseHandler);
+        String url = getAbsoluteLivenessUrl("/verification/video");
+        client.post(url, params, responseHandler);
     }
 
     public void videoVerification(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {

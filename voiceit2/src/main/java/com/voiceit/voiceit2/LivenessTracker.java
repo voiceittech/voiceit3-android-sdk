@@ -369,6 +369,7 @@ class LivenessTracker extends Tracker<Face> {
                         @Override
                         public void run() {
                             stopRecording();
+                            updateDisplayText("Checking", true);
                             sendVideoFile();
                         }
                     }, 5000);
