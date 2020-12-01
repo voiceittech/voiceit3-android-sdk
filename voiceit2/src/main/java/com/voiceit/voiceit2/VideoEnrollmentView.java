@@ -39,7 +39,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
 
     private CameraSource mCameraSource = null;
     private CameraSourcePreview mPreview;
-    private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
     private MediaRecorder mMediaRecorder = null;
     private final Handler timingHandler = new Handler();
 
@@ -52,7 +51,7 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
     private String mUserId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
-
+    private File mPictureFile;
     private int mEnrollmentCount = 0;
     private final int mNeededEnrollments = 3;
     private int mFailedAttempts = 0;
@@ -112,6 +111,7 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
             sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         }
+        mPictureFile = Utils.getOutputMediaFile(".jpeg", this);
     }
 
     private void startEnrollmentFlow() {
@@ -317,19 +317,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
         }
     }
 
-//    private void stopRecording() {
-//        if (mMediaRecorder != null) {
-//            try {
-//                mMediaRecorder.stop();
-//            } catch (Exception e) {
-//                Log.d(mTAG, "Error trying to stop MediaRecorder");
-//            }
-//            mMediaRecorder.reset();
-//            mMediaRecorder.release();
-//            mMediaRecorder = null;
-//        }
-//    }
-
     private void releaseMediaRecorder(){
         if(mMediaRecorder!=null){
             mMediaRecorder.reset();
@@ -351,7 +338,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
     }
 
     private void takePicture() {
-
         // Enroll after taking picture
         final CameraSource.PictureCallback mPictureCallback = new CameraSource.PictureCallback() {
             @Override
@@ -371,7 +357,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                 } catch (IOException e) {
                     Log.d(mTAG, "Error accessing file: " + e.getMessage());
                 }
-
                 // Enroll with picture taken
                 enrollUser();
             }
@@ -411,7 +396,7 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                     Log.d(mTAG,"JSON exception : " + e.toString());
                 }
                 // Wait for ~4.5 seconds
-                timingHandler.postDelayed(new Runnable() {
+                timingHandler.postDelayed( new Runnable() {
                     @Override
                     public void run() {
                         mFailedAttempts++;
@@ -432,6 +417,7 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                             }
                             // Try again
                             FaceTracker.continueDetecting = true;
+                            startEnrollmentFlow();
                         }
                     }
                 }, 4500);
@@ -459,8 +445,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                 mMediaRecorder = new MediaRecorder();
                 Utils.startMediaRecorder(mMediaRecorder, audioVideoFile, mCameraSource, mPreview);
 
-//                Utils.startMediaRecorder(mMediaRecorder, audioFile);
-
                 mOverlay.setProgressCircleColor(getResources().getColor(R.color.progressCircle));
                 mOverlay.startDrawingProgressCircle();
                 // Record for ~5 seconds, then send enrollment data
@@ -470,7 +454,6 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                     public void run() {
                         if (mContinueEnrolling) {
                             stopRecording();
-
                             // assign new file to audio file
                             Utils.stripAudio(audioVideoFile, audioFile, new AudioExtractionCompletion() {
                                 @Override
@@ -510,6 +493,7 @@ public class VideoEnrollmentView extends AppCompatActivity implements SensorEven
                                                                 mOverlay.setPicture(null);
                                                                 // Continue Enrolling
                                                                 FaceTracker.continueDetecting = true;
+                                                                startEnrollmentFlow();
                                                             }
                                                         }
                                                     }, 2000);

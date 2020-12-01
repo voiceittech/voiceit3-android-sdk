@@ -43,6 +43,18 @@ class Utils {
         }
     }
 
+    /** Create a File for saving an image */
+    static File getOutputMediaFile(String suffix, Activity mActivity){
+        try {
+            File file = new File(mActivity.getFilesDir() + "/" + File.separator + "pic.jpeg");
+            file.createNewFile();
+            return file;
+        } catch (IOException e) {
+            Log.e(mTAG,"Creating " + suffix + " file failed with exception : " + e.getMessage());
+            return null;
+        }
+    }
+
     /** Create a File for saving an image or audio file */
     static File getOutputVideoFile(String suffix, Activity mActivity){
         try {
