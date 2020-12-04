@@ -95,7 +95,7 @@ new JsonHttpResponseHandler() {
 ### Liveness Detection
 
 For our Encapsulated Face and Video Verification methods, liveness detection can be enabled by parameter. 
-This enables a pre-check(prompting to the user to turn their head or smile) before the verification API call to decrease the chance a user is able to spoof with a photo of someone else.
+This enables a pre-check(prompting to the user to turn their head or smile) before the verification API call to decrease the chance a user is able to spoof with a photo of someone else. This helps to mitigate replay attacks.
 
 ### Encapsulated Methods
 
@@ -201,7 +201,7 @@ support@voiceit.io
 
 ## Author
 
-Stephen Akers
+VoiceIt Technologies, LLC.
 
 ## License
 
