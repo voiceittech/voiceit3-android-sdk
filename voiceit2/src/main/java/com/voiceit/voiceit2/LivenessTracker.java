@@ -60,11 +60,11 @@ class LivenessTracker extends Tracker<Face> {
     private String mScreenType;
     private String mUserId;
     private String mPhrase;
+    private boolean isCameraPrepared;
     private CameraSource mCameraSource;
     private MediaRecorder mRecorder;
     static boolean continueDetecting = true;
     static boolean lookingAway = false;
-    static boolean isLivenessTested = false;
     static final Handler livenessTimer = new Handler();
     private CameraSourcePreview mPreview;
     private VoiceItAPI2 mVoiceItAPI2;
@@ -170,9 +170,9 @@ class LivenessTracker extends Tracker<Face> {
     @Override
     public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face) {
         if(mDoLivenessCheck) {
-            if (!isLivenessTested) {
-                isLivenessTested = true;
-                prepareForVideoRecording();
+            isCameraPrepared = false;
+            if (prepareForVideoRecording() && !isCameraPrepared) {
+                isCameraPrepared = true;
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -185,7 +185,7 @@ class LivenessTracker extends Tracker<Face> {
                     }
                 });
             }
-        } else {
+        } else if(!mDoLivenessCheck) {
             if (LivenessTracker.continueDetecting) {
                 final int numFaces = detectionResults.getDetectedItems().size();
 
@@ -370,6 +370,7 @@ class LivenessTracker extends Tracker<Face> {
                         @Override
                         public void run() {
                             updateDisplayText(mActivity.getString(R.string.SAY_PASSPHRASE, mPhrase), false);
+                            setProgressCircleAngle(270.0,360.0);
                             setProgressCircleColor(R.color.progressCircle);
                             mOverlay.startDrawingProgressCircle();
                             handler.postDelayed(new Runnable() {
@@ -482,7 +483,6 @@ class LivenessTracker extends Tracker<Face> {
             if(!success && retry){
                 playLivenessPrompt(audioString);
                 mOverlay.updateDisplayText(uiMessage);
-                updateDisplayText(uiMessage, true);
                 prepareForVideoRecording();
                 performLivenessTest();
             }

@@ -19,7 +19,7 @@ import com.voiceit.voiceit2.VoiceItAPI2;
 public class MainActivity extends AppCompatActivity {
 
     private VoiceItAPI2 myVoiceIt;
-    private String [] userId = {"usr_4947e5f9190e4ebba59beeeb37babb5f", "usr_6eba9c39db2241fab1f67fa1bc1a752b"};
+    private String [] userId = {"USER_ID_HERE", "USER_ID_HERE"};
     private int userIdIndex = 0;
     private String groupId = "GROUP_ID";
     private String phrase = "Never forget tomorrow is a new day";
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         // If using user tokens, replace API_KEY below with the user token,
         // and leave the second argument as an empty string
-        myVoiceIt = new VoiceItAPI2("key_425737312aa1450eb4ddd1ea928588b1","tok_be382af6831846cc98876f32cf8c54d5");
+        myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
 
         userIdSwitch = findViewById(R.id.switch_user);
         livenessSwitch = findViewById(R.id.switch_liveness);
