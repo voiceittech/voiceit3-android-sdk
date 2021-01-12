@@ -318,17 +318,27 @@
         }
 
         private void requestHardwarePermissions() {
+            final int PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
             final int PERMISSIONS_REQUEST_CAMERA = 1;
             final int ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 2;
             // MY_PERMISSIONS_REQUEST_* is an app-defined int constant. The callback method gets the
             // result of the request.
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                     != PackageManager.PERMISSION_GRANTED) {
 
                 if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{ Manifest.permission.CAMERA},
+                    requestPermissions(new String[]{
+                                    Manifest.permission.RECORD_AUDIO,
+                                    Manifest.permission.CAMERA},
                             ASK_MULTIPLE_PERMISSION_REQUEST_CODE);
                 } else {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+                                PERMISSIONS_REQUEST_RECORD_AUDIO);
+                    }
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                             != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},

@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         // If using user tokens, replace API_KEY below with the user token,
         // and leave the second argument as an empty string
-        myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
+        myVoiceIt = new VoiceItAPI2("API_KEY","API_TOKEN");
 
         userIdSwitch = findViewById(R.id.switch_user);
         livenessSwitch = findViewById(R.id.switch_liveness);
