@@ -170,24 +170,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void encapsulatedVideoIdentification(View view) {
-        myVoiceIt.encapsulatedVideoIdentification(this, groupId, contentLanguage, phrase, doLivenessCheck, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                System.out.println("encapsulatedVideoIdentification onSuccess Result : " + response.toString());
-                displayIdentifiedUser(response);
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                checkResponse(errorResponse);
-                if (errorResponse != null) {
-                    System.out.println("encapsulatedVideoIdentification onFailure Result : " + errorResponse.toString());
-                }
-            }
-        });
-    }
-
     public void encapsulatedFaceEnrollment(View view) {
         myVoiceIt.encapsulatedFaceEnrollment(this, userId[userIdIndex], new JsonHttpResponseHandler() {
             @Override
@@ -222,23 +204,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void encapsulatedFaceIdentification(View view) {
-        myVoiceIt.encapsulatedFaceIdentification(this, groupId, doLivenessCheck, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                System.out.println("encapsulatedFaceIdentification onSuccess Result : " + response.toString());
-                displayIdentifiedUser(response);
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                checkResponse(errorResponse);
-                if (errorResponse != null) {
-                    System.out.println("encapsulatedFaceIdentification onFailure Result : " + errorResponse.toString());
-                }
-            }
-        });
-    }
 
     public void checkResponse(JSONObject response) {
         try {

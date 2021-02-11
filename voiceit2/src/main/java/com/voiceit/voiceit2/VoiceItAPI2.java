@@ -710,125 +710,6 @@ public class VoiceItAPI2 {
         client.post(getAbsoluteUrl("/identification/voice/byUrl"), params, responseHandler);
     }
 
-    public void videoIdentification(String groupId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        videoIdentification(groupId, contentLanguage, phrase, new File(videoPath), responseHandler);
-    }
-
-    public void videoIdentification(String groupId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/identification/video"), params, responseHandler);
-    }
-
-    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, String audioPath, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        videoIdentificationWithPhoto(groupId, contentLanguage, phrase, new File(audioPath), new File(photoPath), responseHandler);
-    }
-
-    public void videoIdentificationWithPhoto(String groupId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("audio", audio);
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/identification/video"), params, responseHandler);
-    }
-
-    public void videoIdentificationByUrl(String groupId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/identification/video/byUrl"), params, responseHandler);
-    }
-
-    public void faceIdentification(String groupId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        faceIdentification(groupId, new File(videoPath), responseHandler);
-    }
-
-    public void faceIdentification(String groupId, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
-    }
-
-    public void faceIdentificationWithPhoto(String groupId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        faceIdentificationWithPhoto(groupId, new File(photoPath), responseHandler);
-    }
-
-    public void faceIdentificationWithPhoto(String groupId, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        try {
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/identification/face"), params, responseHandler);
-    }
-
-    public void faceIdentificationByUrl(String groupId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/identification/face/byUrl"), params, responseHandler);
-    }
-
     public void encapsulatedVoiceEnrollment(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
         if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -948,36 +829,6 @@ public class VoiceItAPI2 {
         //requestWritePermission(activity);
     }
 
-    public void encapsulatedVideoIdentification(Activity activity, String groupId, String contentLanguage, String phrase, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedVideoIdentification(activity, groupId, contentLanguage, phrase, doLivenessCheck, 0, 2, responseHandler);
-    }
-
-    public void encapsulatedVideoIdentification(Activity activity, String groupId, String contentLanguage, String phrase, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
-        if (!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        Intent intent = new Intent(activity, VideoIdentificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putString("groupId", groupId);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
-        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
-        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
-    }
-
     public void encapsulatedFaceEnrollment(Activity activity, String userId, final JsonHttpResponseHandler responseHandler) {
         if (!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -1034,33 +885,6 @@ public class VoiceItAPI2 {
         //requestWritePermission(activity);
     }
 
-    public void encapsulatedFaceIdentification(Activity activity, String groupId, boolean doLivenessCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedFaceIdentification(activity, groupId, doLivenessCheck, 0, 2, responseHandler);
-    }
-
-    public void encapsulatedFaceIdentification(Activity activity, String groupId, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
-        if (!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        Intent intent = new Intent(activity, FaceIdentificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putString("groupId", groupId);
-        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
-        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
-        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
-    }
 
     private void broadcastMessageHandler(final Activity activity, final JsonHttpResponseHandler responseHandler) {
         // Our handler for received Intents. This will be called whenever an Intent
