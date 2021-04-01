@@ -30,8 +30,8 @@ public class VoiceItAPI2 {
     private String notificationURL;
 
     private final String mTAG = "VoiceItAPI2";
-    private String BASE_URL = "https://staging-api.voiceit.io";
-    private String LIVENESS_URL = "https://staging-liveness.voiceit.io/v1";
+    private String BASE_URL = "https://api.voiceit.io";
+    private String LIVENESS_URL = "https://liveness.voiceit.io/v1";
 
     public boolean mDisplayPreviewFrame = false;
 
