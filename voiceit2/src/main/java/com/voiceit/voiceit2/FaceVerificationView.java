@@ -155,8 +155,8 @@
             Utils.setBrightness(this,255);
         }
 
-        private void handleError(){
-            mOverlay.updateDisplayText("Error Getting Liveness Challenge");
+        private void handleError(String res){
+            mOverlay.updateDisplayText(res);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -189,13 +189,19 @@
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
-                    handleError();
+                    try {
+                        String message = errorResponse.getString("message");
+                        handleError(message.toString());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        handleError("Please confirm that the content language is valid");
+                    }
                 }
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     super.onFailure(statusCode, headers, responseString, throwable);
-                    handleError();
+                    handleError("Please confirm that the content language is valid");
                 }
             });
         }
