@@ -22,6 +22,7 @@ A fully comprehensive SDK that gives you access to VoiceIt's API 2.0 featuring V
       * [Encapsulated Video Verification](#encapsulated-video-verification)
       * [Encapsulated Video Identification](#encapsulated-video-identification)
   * [Other API Calls](#other-api-calls)
+* [Theme](#setting-the-theme)
 
 
 ## UI Screenshots
@@ -203,6 +204,15 @@ Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','e
 ```java
 myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, new JsonHttpResponseHandler() {...});
 ```
+
+### Setting The Theme
+
+To set the theme, please initialize the voiceit Module with the Color integer as the third argument: 
+
+```
+myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK", Color.parseColor("HEX_COLOR_VALUE_HERE"));
+```
+Please make sure that the color is a valid Hex value. The parseColor method throws an IllegalArgumentException so it is recommended to wrap the initialize method in try-catch blocks
 
 ### Other API Calls
 
