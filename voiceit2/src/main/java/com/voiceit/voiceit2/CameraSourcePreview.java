@@ -18,7 +18,7 @@ package com.voiceit.voiceit2;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.hardware.Camera;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
