@@ -5,10 +5,10 @@ group = 'com.github.voiceittech'
 android {
     compileSdkVersion 28
     defaultConfig {
-        minSdkVersion 17
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
-        versionName "2.2.3"
+        versionName "2.2.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
