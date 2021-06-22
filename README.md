@@ -51,6 +51,13 @@ In order to use en-US or other content languages you need to have a developer ac
 #### Voiceprint Phrases 
 Make sure you review your Voiceprint Phrases by navigating to: https://voiceit.io/phraseManagement in order to know what to pass for voicePrintPhrase parameter
 
+#### AndroidX
+Make sure your project has the useAndroidX and enableJetifier flags as true: Navigate to the gradle.properties of your project and add the following: 
+```
+android.useAndroidX=true
+android.enableJetifier=true
+```
+
 ## Installation
 
 VoiceItApi2AndroidSDK is available through [JitPack](https://jitpack.io/#voiceittech/VoiceItApi2AndroidSDK/).
