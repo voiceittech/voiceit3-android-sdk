@@ -1,7 +1,7 @@
 package com.voiceit.voiceit2;
 
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
 
@@ -24,7 +24,7 @@ import cz.msebera.android.httpclient.Header;
 
 import static org.junit.Assert.*;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(AndroidJUnit4ClassRunner.class)
 public class VoiceItInstrumentedTest {
 
     final private String apiKey = InstrumentationRegistry.getArguments().getString("key");
@@ -39,7 +39,7 @@ public class VoiceItInstrumentedTest {
     private final ArrayList<String> enrollmentIds = new ArrayList<>();
     private final ArrayList<String> faceEnrollmentIds = new ArrayList<>();
 
-    final private String dir = InstrumentationRegistry.getTargetContext().getFilesDir().getAbsolutePath();
+    final private String dir = InstrumentationRegistry.getInstrumentation().getTargetContext().getFilesDir().getAbsolutePath();
 
     private CountDownLatch signal;
 
