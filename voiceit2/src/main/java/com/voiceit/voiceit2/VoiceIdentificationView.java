@@ -197,7 +197,7 @@ public class VoiceIdentificationView extends AppCompatActivity {
 
     private void failIdentification(final JSONObject response) {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
-        mOverlay.updateDisplayText("DENTIFY_FAIL");
+        mOverlay.updateDisplayText("IDENTIFY_FAIL");
 
         // Wait for ~1.5 seconds
         timingHandler.postDelayed(new Runnable() {
