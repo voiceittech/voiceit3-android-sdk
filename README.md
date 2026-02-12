@@ -1,6 +1,6 @@
 <img src="Graphics/android.png" width="100%" style="width:100%">
 
-# VoiceIt 2 Android SDK [![travisstatus](https://travis-ci.com/voiceittech/VoiceIt3-AndroidSDK.svg?branch=master)](https://travis-ci.com/github/voiceittech/VoiceIt3-AndroidSDK) ![jitpack](https://jitpack.io/v/voiceittech/VoiceIt3-AndroidSDK.svg) ![MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
+# VoiceIt 3 Android SDK [![travisstatus](https://travis-ci.com/voiceittech/VoiceIt3-AndroidSDK.svg?branch=master)](https://travis-ci.com/github/voiceittech/VoiceIt3-AndroidSDK) ![jitpack](https://jitpack.io/v/voiceittech/VoiceIt3-AndroidSDK.svg) ![MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 
 A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring Voice + Face Verification and Identification right in your Android app.
 
@@ -62,31 +62,31 @@ android.enableJetifier=true
 
 ## Installation
 
-VoiceItApi2AndroidSDK is available through [JitPack](https://jitpack.io/#voiceittech/VoiceItApi2AndroidSDK/).
+VoiceItApi3AndroidSDK is available through [JitPack](https://jitpack.io/#voiceittech/VoiceItApi3AndroidSDK/).
 
 ## Local Installation
 <ul>
  <li> Clone the repo
  <li> Open your android project in android studio, and navigate to File -> New -> Import Module
- <li> Select the Android SDK repo that you just cloned. Check off the app module, only include the voiceit2 module
+ <li> Select the Android SDK repo that you just cloned. Check off the app module, only include the voiceit3 module
 </ul>
 
 ## API Calls
 
 ### Initialization
 
-First import *VoiceItAPI2* and then initialize a reference to the SDK inside an Activity, passing in your API Credentials or user token.
+First import *VoiceItAPI3* and then initialize a reference to the SDK inside an Activity, passing in your API Credentials or user token.
 
 ```java
 import com.loopj.android.http.JsonHttpResponseHandler;
 import cz.msebera.android.httpclient.Header;
 import org.json.JSONObject;
 
-import com.voiceit.voiceit2.VoiceItAPI2;
+import com.voiceit.voiceit3.VoiceItAPI3;
 
 public class MainActivity extends AppCompatActivity {
 
-    private VoiceItAPI2 myVoiceIt;
+    private VoiceItAPI3 myVoiceIt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
         // If using user tokens, replace API_KEY below with the user token,
         // and leave the second argument as an empty string
-        myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK");
+        myVoiceIt = new VoiceItAPI3("API_KEY","API_TOK");
     }
 }
 ```
@@ -219,7 +219,7 @@ myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LA
 To set the theme, please initialize the voiceit Module with the Color integer as the third argument: 
 
 ```
-myVoiceIt = new VoiceItAPI2("API_KEY","API_TOK", Color.parseColor("HEX_COLOR_VALUE_HERE"));
+myVoiceIt = new VoiceItAPI3("API_KEY","API_TOK", Color.parseColor("HEX_COLOR_VALUE_HERE"));
 ```
 Please make sure that the color is a valid Hex value. The parseColor method throws an IllegalArgumentException so it is recommended to wrap the initialize method in try-catch blocks
 
@@ -238,7 +238,7 @@ myVoiceIt.checkUserExists("USER_ID_HERE", new JsonHttpResponseHandler() {...});
 
 All strings and prompts utilized in the encapsulated views can be overwitten by adding strings with the same names as found in:
 ```
-/voiceit2/src/main/res/values/strings.xml
+/voiceit3/src/main/res/values/strings.xml
 ```
 to the strings.xml file in your app.
 
@@ -248,5 +248,5 @@ VoiceIt Technologies, <a href="mailto:support@voiceit.io" target="_blank">suppor
 
 ## License
 
-VoiceItApi2AndroidSDK is available under the MIT license. See the LICENSE file for more info.
+VoiceItApi3AndroidSDK is available under the MIT license. See the LICENSE file for more info.
 
