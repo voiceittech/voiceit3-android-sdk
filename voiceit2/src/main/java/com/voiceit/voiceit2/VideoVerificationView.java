@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -27,8 +26,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
@@ -46,7 +43,6 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     private final File mPictureFile = Utils.getOutputMediaFile(".jpeg");
     private MediaRecorder mMediaRecorder = null;
     private final Handler timingHandler = new Handler();
-    private  File file;
     private int voiceitThemeColor = 0;
 
     private final String mTAG = "VideoVerificationView";
@@ -54,16 +50,10 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
 
     private RadiusOverlayView mOverlay;
 
-//    private boolean playInstructionalVideo;
-
-//    boolean playLivenessTutorial = true;
     private VoiceItAPI2 mVoiceIt2;
     private String mUserId = "";
     private String mContentLanguage = "";
     private String mPhrase = "";
-    private boolean mDoLivenessCheck = false;
-    private int livenessChallengeFailsAllowed;
-    private int mLivenessChallengesNeeded;
 
     private final int mNeededEnrollments = 3;
     private int mFailedAttempts = 0;
@@ -72,68 +62,6 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
 
     private SensorManager sensorManager = null;
     private Sensor lightSensor;
-
-    private boolean livenessSuccess = false;
-    private String lcoId = "";
-    private String uiLivenessInstruction;
-    private List<String> lcoStrings = new ArrayList<String>();
-    private List<String> lco= new ArrayList<String>();
-    private float challengeTime;
-    private final String SCREEN_TYPE = "video_verification";
-    private boolean mDoLivenessAudioCheck;
-
-
-    private void getLivenessData(){
-        mVoiceIt2.getInitialLivenessData(mUserId, mContentLanguage, "verification", new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
-                Log.v("response", response.toString());
-                try {
-                    lcoId = response.getString("lcoId");
-                    livenessSuccess = response.getBoolean("success");
-                    uiLivenessInstruction = response.getString("uiLivenessInstruction");
-                    for(int i = 0; i < response.getJSONArray("lcoStrings").length(); i++ ){
-                        lcoStrings.add(response.getJSONArray("lcoStrings").getString(i));
-                    }
-                    for(int i = 0; i < response.getJSONArray("lco").length(); i++ ){
-                        lco.add(response.getJSONArray("lco").getString(i));
-                    }
-                    challengeTime = response.getInt("livenessChallengeTime");
-                    beginVerification();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
-                exitViewWithMessage("voiceit-failure","Error Getting Liveness Challenge");
-            }
-        });
-    }
-
-    private void releaseMediaRecorder(){
-        if(mMediaRecorder!=null){
-            mMediaRecorder.reset();
-            mMediaRecorder.release();
-            mMediaRecorder = null;
-            mCameraSource.getCameraInstance().lock();
-        }
-    }
-
-    public void stopRecording() {
-        if(mMediaRecorder!=null && mDoLivenessCheck) {
-            mMediaRecorder.stop();
-            releaseMediaRecorder();
-            mCameraSource.getCameraInstance().lock();
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        stopRecording();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,25 +77,11 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
             mContentLanguage = bundle.getString("contentLanguage");
             mPhrase = bundle.getString("phrase");
             mVoiceIt2.setNotificationURL(bundle.getString("notificationURL"));
-//            playLivenessTutorial = bundle.getBoolean("livenessTutorial");
-            mDoLivenessCheck = bundle.getBoolean("doLivenessCheck");
-            mDoLivenessAudioCheck = bundle.getBoolean("doLivenessAudioCheck");
-            livenessChallengeFailsAllowed = bundle.getInt("livenessChallengeFailsAllowed");
-            mLivenessChallengesNeeded = bundle.getInt("livenessChallengesNeeded");
             CameraSource.displayPreviewFrame = bundle.getBoolean("displayPreviewFrame");
             this.voiceitThemeColor = bundle.getInt("voiceitThemeColor");
             if (this.voiceitThemeColor == 0) {
                 this.voiceitThemeColor = getResources().getColor(R.color.progressCircle);
                 // color is a valid color
-            }
-        }
-
-        // Initialize video file for recording data
-        if(mDoLivenessCheck) {
-            try {
-                createFile();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
 
@@ -177,11 +91,6 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
         } catch (NullPointerException e) {
             Log.d(mTAG,"Cannot hide action bar");
         }
-
-        // // Set screen brightness to full
-        // if(!Utils.setBrightness(this, 255)){
-        //     exitViewWithMessage("voiceit-failure","Hardware Permissions not granted");
-        // }
 
         // Set context
         mContext = this;
@@ -206,21 +115,7 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         }
 
-//        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-//        SharedPreferences.Editor prefEditor = sharedPref.edit();
-//        playInstructionalVideo = this.playLivenessTutorial && sharedPref.getBoolean("playInstructionalVideo", true);
-//        if(playInstructionalVideo && mDoLivenessCheck) {
-//            prefEditor.putBoolean("playInstructionalVideo", false);
-//            prefEditor.apply();
-//
-//            Intent intent = new Intent(this, InstructionalVideoView.class);
-//            bundle = new Bundle();
-//            bundle.putBoolean("isVideo", true);
-//            intent.putExtras(bundle);
-//            this.startActivityForResult(intent, 0);
-//        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        //Utils.setBrightness(this,255);
     }
 
     private void beginVerification(){
@@ -246,12 +141,8 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
                                 }
                             }, 2500);
                         } else {
-                            if(!mDoLivenessCheck){
-                                mOverlay.updateDisplayText("LOOK_INTO_CAM");
-                            } else{
-                                mOverlay.updateDisplayTextDirectly(uiLivenessInstruction);
-                            }
-                            LivenessTracker.continueDetecting = true;
+                            mOverlay.updateDisplayText("LOOK_INTO_CAM");
+                            FaceTracker.continueDetecting = true;
                         }
                     } catch (JSONException e) {
                         Log.d(mTAG, "JSON exception : " + e.toString());
@@ -291,19 +182,8 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
         }
     }
 
-    private void createFile() throws IOException {
-        file = new File(this.getFilesDir() + "/" + File.separator + "video.mp4");
-        file.createNewFile();
-    }
-
-
     private void startVerificationFlow() {
-        // get Live-nes Challenges and time
-        if(mDoLivenessCheck) {
-            getLivenessData();
-        } else {
-            beginVerification();
-        }
+        beginVerification();
     }
 
     /**
@@ -313,22 +193,15 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     private class FaceTrackerFactory implements MultiProcessor.Factory<Face> {
 
         private final Activity mActivity;
-        private final int [] livenessChallengeOrder = {1, 2, 3};
 
         private FaceTrackerFactory(VideoVerificationView activity) {
             mActivity = activity;
-            LivenessTracker.continueDetecting = false;
-            LivenessTracker.livenessChallengesPassed = 0;
-            LivenessTracker.livenessChallengeFails = 0;
-            Utils.randomizeArrayOrder(livenessChallengeOrder);
+            FaceTracker.continueDetecting = false;
         }
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new LivenessTracker(mVoiceIt2, mOverlay, mActivity, new FaceTrackerCallBackImpl(),
-                    livenessChallengeOrder, mDoLivenessCheck, mDoLivenessAudioCheck, mPreview, mPhrase,
-                    livenessChallengeFailsAllowed, mLivenessChallengesNeeded, uiLivenessInstruction, mUserId,
-                    lcoStrings, lco, challengeTime, livenessSuccess, lcoId, mContentLanguage, SCREEN_TYPE, mCameraSource, mMediaRecorder);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl());
         }
     }
 
@@ -384,10 +257,8 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     }
 
     private void exitViewWithMessage(String action, String message) {
-        //Utils.setBrightness(this, Utils.oldBrightness);
         mContinueVerifying = false;
         timingHandler.removeCallbacksAndMessages(null);
-        LivenessTracker.livenessTimer.removeCallbacksAndMessages(null);
         stopRecording();
         Intent intent = new Intent(action);
         JSONObject json = new JSONObject();
@@ -403,16 +274,27 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     }
 
     public void exitViewWithJSON(String action, JSONObject json) {
-        //Utils.setBrightness(this, Utils.oldBrightness);
         mContinueVerifying = false;
         timingHandler.removeCallbacksAndMessages(null);
-        LivenessTracker.livenessTimer.removeCallbacksAndMessages(null);
         stopRecording();
         Intent intent = new Intent(action);
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         finish();
         overridePendingTransition(0, 0);
+    }
+
+    private void stopRecording() {
+        if (mMediaRecorder != null) {
+            try {
+                mMediaRecorder.stop();
+            } catch (Exception e) {
+                Log.d(mTAG, "Error trying to stop MediaRecorder");
+            }
+            mMediaRecorder.reset();
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+        }
     }
 
     @Override
@@ -443,10 +325,8 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
     @Override
     protected void onStart() {
         super.onStart();
-//        if(!playInstructionalVideo || !mDoLivenessCheck) {
             // Confirm permissions and start enrollment flow
             requestHardwarePermissions();
-//        }
     }
 
     @Override
@@ -477,6 +357,12 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopRecording();
+    }
+
     private void takePicture() {
 
         // Verify after taking picture
@@ -499,14 +385,7 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
                     Log.d(mTAG, "Error accessing file: " + e.getMessage());
                 }
 
-                // With liveness checks enabled, a picture is taken before it is done
-                // and verify is called later
-                if(!mDoLivenessCheck) {
-                    verifyUser();
-                }  else {
-                    // Continue liveness detection
-                    LivenessTracker.continueDetecting = true;
-                }
+                verifyUser();
             }
         };
 
@@ -567,13 +446,10 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
                                 }
                             },2000);
                         } else if (mContinueVerifying) {
-                            if(LivenessTracker.lookingAway) {
+                            if(FaceTracker.lookingAway) {
                                 mOverlay.updateDisplayText("LOOK_INTO_CAM");
                             }
-                            // Reset liveness check and try again
-                            LivenessTracker.livenessChallengesPassed = 0;
-                            LivenessTracker.livenessChallengeFails = 0;
-                            LivenessTracker.continueDetecting = true;
+                            FaceTracker.continueDetecting = true;
                         }
                     }
                 }, 4500);
@@ -684,7 +560,7 @@ public class VideoVerificationView extends AppCompatActivity implements SensorEv
         }
     }
 
-    class FaceTrackerCallBackImpl implements LivenessTracker.viewCallBacks { // Implements callback methods defined in FaceTracker interface
+    class FaceTrackerCallBackImpl implements FaceTracker.viewCallBacks { // Implements callback methods defined in FaceTracker interface
         public void authMethodToCallBack() { verifyUser(); }
         public void takePictureCallBack() { takePicture(); }
     }

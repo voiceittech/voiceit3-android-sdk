@@ -105,31 +105,6 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Switch
-        android:id="@+id/switch_liveness"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="18dp"
-        android:layout_marginTop="16dp"
-        android:onClick="toggleLiveness"
-        android:text="Liveness detection"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:checked="false" />
-
-    <Switch
-        android:id="@+id/switch_liveness_audio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="16dp"
-        android:onClick="toggleLivenessAudio"
-        android:text="Liveness audio"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:checked="false"
-        android:visibility="gone" />
-
-    <Switch
         android:id="@+id/switch_user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

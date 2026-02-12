@@ -25,12 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private String groupId = "GROUP_ID";
     private String phrase = "Never forget tomorrow is a new day";
     private String contentLanguage = "es-MX";
-    private boolean doLivenessCheck = false; // Liveness detection is not used for enrollment views
-    private boolean doLivenessAudioCheck = false;
 
     private Switch userIdSwitch;
-    private Switch livenessSwitch;
-    private Switch livenessAudioSwitch;
     private Context mContext = this;
 
     @Override
@@ -42,23 +38,7 @@ public class MainActivity extends AppCompatActivity {
         // and leave the second argument as an empty string
 		myVoiceIt = new VoiceItAPI2("API_KEY HERE","API_TOKEN HERE");
         userIdSwitch = findViewById(R.id.switch_user);
-        livenessSwitch = findViewById(R.id.switch_liveness);
-        livenessAudioSwitch = findViewById(R.id.switch_liveness_audio);
         userIdSwitch.setText("User 1");
-    }
-
-    public void toggleLiveness(View view) {
-        doLivenessCheck = livenessSwitch.isChecked();
-        if(doLivenessCheck){
-            livenessAudioSwitch.setVisibility(View.VISIBLE);
-    }
-        else {
-            livenessAudioSwitch.setVisibility(View.GONE);
-        }
-    }
-
-    public void toggleLivenessAudio(View view) {
-        doLivenessAudioCheck = livenessAudioSwitch.isChecked();
     }
 
     public void toggleUser(View view) {
@@ -154,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedVideoVerification(View view) {
-        myVoiceIt.encapsulatedVideoVerification(this, userId[userIdIndex], contentLanguage, phrase, doLivenessCheck, doLivenessAudioCheck, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedVideoVerification(this, userId[userIdIndex], contentLanguage, phrase, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedVideoVerification onSuccess Result : " + response.toString());
@@ -189,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void encapsulatedFaceVerification(View view) {
-        myVoiceIt.encapsulatedFaceVerification(this, userId[userIdIndex], contentLanguage, doLivenessCheck, doLivenessAudioCheck, new JsonHttpResponseHandler() {
+        myVoiceIt.encapsulatedFaceVerification(this, userId[userIdIndex], contentLanguage, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 System.out.println("encapsulatedFaceVerification onSuccess Result : " + response.toString());

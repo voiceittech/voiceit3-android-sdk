@@ -34,7 +34,6 @@ public class VoiceItAPI2 {
 
     private final String mTAG = "VoiceItAPI2";
     private String BASE_URL = "https://api.voiceit.io";
-    private String LIVENESS_URL = "https://liveness.voiceit.io/v1";
 
     public boolean mDisplayPreviewFrame = false;
 
@@ -94,24 +93,12 @@ public class VoiceItAPI2 {
         return BASE_URL + relativeUrl;
     }
 
-    private String getAbsoluteLivenessUrl(String relativeUrl) {
-        return LIVENESS_URL + relativeUrl;
-    }
-
     public void getPhrases(String contentLanguage, AsyncHttpResponseHandler responseHandler) {
         client.get(getAbsoluteUrl("/phrases/" + contentLanguage + "?notificationURL=" + this.notificationURL), responseHandler);
     }
 
     public void setNotificationURL(String notificationUrl) {
         this.notificationURL = notificationUrl;
-    }
-
-    public void getInitialLivenessData(String userID, String contentLanguage, String pageCategory, AsyncHttpResponseHandler responseHandler ) {
-        if(!userIdFormatted(userID)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteLivenessUrl("/"+pageCategory+"/"+userID+"/"+contentLanguage + "?notificationURL=" + this.notificationURL), responseHandler);
     }
 
     public void getAllUsers(AsyncHttpResponseHandler responseHandler) {
@@ -185,55 +172,6 @@ public class VoiceItAPI2 {
             return;
         }
         client.get(getAbsoluteUrl("/enrollments/video/" + userId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void processLivenessFace(String userId,  String phrase, String videoPath, String lcoId,  AsyncHttpResponseHandler responseHandler) {
-        processLivenessFace(userId, new File(videoPath), lcoId, responseHandler);
-    }
-
-    public void processLivenessFace(String userId, File video, String lcoId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("lcoId", lcoId);
-
-        try {
-            params.put("file", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteLivenessUrl("/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void processLivenessVideo(String userId,  String phrase, String videoPath, String lcoId,  AsyncHttpResponseHandler responseHandler) {
-        processLivenessVideo(userId, phrase, new File(videoPath), lcoId, responseHandler);
-    }
-
-    public void processLivenessVideo(String userId, String phrase, File video, String lcoId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("lcoId", lcoId);
-        params.put("phrase", phrase);
-
-        try {
-            params.put("file", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteLivenessUrl("/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
     }
 
     public void createVoiceEnrollment(String userId, String contentLanguage, String phrase, String recordingPath, AsyncHttpResponseHandler responseHandler) {
@@ -545,27 +483,6 @@ public class VoiceItAPI2 {
         faceVerification(userId, new File(videoPath), responseHandler);
     }
 
-    public void faceVerification(String userId, String contentLanguage, File video, AsyncHttpResponseHandler responseHandler, String lcoId){
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("lcoId", lcoId);
-        params.put("contentLanguage", contentLanguage);
-
-        try {
-            params.put("file", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteLivenessUrl("/verification/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
     public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
         if(!userIdFormatted(userId)) {
             responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
@@ -644,28 +561,6 @@ public class VoiceItAPI2 {
         }
 
         client.post(getAbsoluteUrl("/verification/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler, String lcoId) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("lcoId", lcoId);
-        try {
-            params.put("file", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        String url = getAbsoluteLivenessUrl("/verification/video"+ "?notificationURL=" + this.notificationURL);
-        client.post(url, params, responseHandler);
     }
 
     public void videoVerification(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
@@ -888,11 +783,7 @@ public class VoiceItAPI2 {
         //requestWritePermission(activity);
     }
 
-    public void encapsulatedVideoVerification(Activity activity, String userId, String contentLanguage, String phrase, boolean doLivenessCheck, boolean doLivenessAudioCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedVideoVerification(doLivenessAudioCheck,activity, userId, contentLanguage, phrase, doLivenessCheck, 0, 2, responseHandler);
-    }
-
-    public void encapsulatedVideoVerification(boolean doLivenessAudioCheck, Activity activity, String userId, String contentLanguage, String phrase, boolean doLivenessCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+    public void encapsulatedVideoVerification(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
         if (!userIdFormatted(userId)) {
             int duration = Toast.LENGTH_SHORT;
             String response = buildJSONFormatMessage().toString();
@@ -917,11 +808,7 @@ public class VoiceItAPI2 {
         bundle.putString("contentLanguage", contentLanguage);
         bundle.putString("phrase", phrase);
         bundle.putString("notificationURL", this.notificationURL);
-        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
-        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
-        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        bundle.putBoolean("doLivenessAudioCheck",doLivenessAudioCheck);
         intent.putExtras(bundle);
         activity.startActivity(intent);
         activity.overridePendingTransition(0, 0);
@@ -965,11 +852,7 @@ public class VoiceItAPI2 {
         //requestWritePermission(activity);
     }
 
-    public void encapsulatedFaceVerification(Activity activity, String userId, String contentLanguage, boolean doLivenessCheck, boolean doLivenessAudioCheck, final JsonHttpResponseHandler responseHandler) {
-        encapsulatedFaceVerification(activity, userId, contentLanguage, doLivenessCheck, doLivenessAudioCheck, 0, 2, responseHandler);
-    }
-
-    public void encapsulatedFaceVerification(Activity activity, String userId, String contentLanguage, boolean doLivenessCheck, boolean doLivenessAudioCheck, int livenessChallengeFailsAllowed, int livenessChallengesNeeded, final JsonHttpResponseHandler responseHandler) {
+    public void encapsulatedFaceVerification(Activity activity, String userId, String contentLanguage, final JsonHttpResponseHandler responseHandler) {
         if (!userIdFormatted(userId)) {
             int duration = Toast.LENGTH_SHORT;
             String response = buildJSONFormatMessage().toString();
@@ -993,10 +876,6 @@ public class VoiceItAPI2 {
         bundle.putString("userId", userId);
         bundle.putString("notificationURL", this.notificationURL);
         bundle.putString("contentLanguage", contentLanguage);
-        bundle.putBoolean("doLivenessCheck", doLivenessCheck);
-        bundle.putBoolean("doLivenessAudioCheck", doLivenessAudioCheck);
-        bundle.putInt("livenessChallengeFailsAllowed", livenessChallengeFailsAllowed);
-        bundle.putInt("livenessChallengesNeeded", livenessChallengesNeeded);
         bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
         intent.putExtras(bundle);
         activity.startActivity(intent);

@@ -181,12 +181,11 @@ public class FaceEnrollmentView extends AppCompatActivity implements SensorEvent
         private FaceTrackerFactory(FaceEnrollmentView activity) {
             mActivity = activity;
             FaceTracker.continueDetecting = false;
-            FaceTracker.livenessChallengesPassed = 0;
         }
 
         @Override
         public Tracker<Face> create(Face face) {
-            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl(), new int[]{}, false, false, 0, 0);
+            return new FaceTracker(mOverlay, mActivity, new FaceTrackerCallBackImpl());
         }
     }
 
