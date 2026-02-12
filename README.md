@@ -2,7 +2,7 @@
 
 # VoiceIt 2 Android SDK [![travisstatus](https://travis-ci.com/voiceittech/VoiceIt3-AndroidSDK.svg?branch=master)](https://travis-ci.com/github/voiceittech/VoiceIt3-AndroidSDK) ![jitpack](https://jitpack.io/v/voiceittech/VoiceIt3-AndroidSDK.svg) ![MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
 
-A fully comprehensive SDK that gives you access to VoiceIt's API 2.0 featuring Voice + Face Verification and Identification right in your Android app.
+A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring Voice + Face Verification and Identification right in your Android app.
 
 * [Getting Started](#getting-started)
 * [Requirements](#requirements)
@@ -34,7 +34,7 @@ The following show Voice Verification, Face Verification (With liveness detectio
 
 ## Getting Started
 
-Contact us at <a href="mailto:support@voiceit.io" target="_blank">support@voiceit.io</a> to get started with an account to use API 2.0.
+Contact us at <a href="mailto:support@voiceit.io" target="_blank">support@voiceit.io</a> to get started with an account to use API 3.0.
 
 <img src="./Graphics/getcredentials.png" alt="API Key and Token" width="400px" />
 
@@ -47,7 +47,7 @@ minSdkVersion: 17
 
 #### API Key and Token 
 
-Contact us at <a href="mailto:support@voiceit.io" target="_blank">support@voiceit.io</a> to get started with an account to use API 2.0.
+Contact us at <a href="mailto:support@voiceit.io" target="_blank">support@voiceit.io</a> to get started with an account to use API 3.0.
 
 #### Voiceprint Phrases 
 
