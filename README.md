@@ -9,7 +9,6 @@ A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring V
 * [Local Installation](#local-installation)
 * [API Calls](#api-calls)
   * [Initialization](#initialization)
-  * [Liveness Detection](#liveness-detection)
   * [Encapsulated Methods](#encapsulated-methods)
       * [Encapsulated Voice Enrollment](#encapsulated-voice-enrollment)
       * [Encapsulated Voice Verification](#encapsulated-voice-verification)
@@ -25,7 +24,7 @@ A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring V
 
 
 ## UI Screenshots
-The following show Voice Verification, Face Verification (With liveness detection on) and Video Verification (with Liveness turned off), respectively.
+The following show Voice Verification, Face Verification, and Video Verification, respectively.
 
 <div style="background: #000 !important;">
   <img width="290px" src="./Graphics/voiceVerification.gif" style="display: inline-block !important"/><img width="290px" src="./Graphics/faceVerification.gif" style="display: inline-block !important;"/><img width="290px" src="./Graphics/videoVerification.gif" style="display: inline-block !important;"/>
@@ -118,11 +117,6 @@ new JsonHttpResponseHandler() {
 });
 ```
 
-### Liveness Detection
-
-For our Encapsulated Face and Video Verification methods, liveness detection can be enabled by parameter. 
-This enables a pre-check(prompting to the user to turn their head or smile) before the verification API call to decrease the chance a user is able to spoof with a photo of someone else. This helps to mitigate replay attacks.
-
 ### Encapsulated Methods
 
 Encapsulated Methods take care of all the logic of enrollment/verification and the UI in new Android Activities.
@@ -164,13 +158,12 @@ myVoiceIt.encapsulatedFaceEnrollment(Activity, "USER_ID_HERE", new JsonHttpRespo
 
 #### Encapsulated Face Verification
 
-Verify user with given userId(begins with 'usr_'), and a boolean to enable liveness detection.
+Verify user with given userId(begins with 'usr_').
 
 ```java
 myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, new JsonHttpResponseHandler() {...});
 ```
 
-with optional boolean to disable or enable liveness tutorial: 
 
 ```
 myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, true, new JsonHttpResponseHandler() {...});
@@ -178,7 +171,7 @@ myVoiceIt.encapsulatedFaceVerification(Activity, "USER_ID_HERE", true, true, new
 
 #### Encapsulated Face Identification
 
-Identify user from given groupId(begins with 'grp_'), and a boolean to enable liveness detection.
+Identify user from given groupId(begins with 'grp_').
 
 ```java
 myVoiceIt.encapsulatedFaceIdentification(Activity, "GROUP_ID_HERE", true, new JsonHttpResponseHandler() {...});
@@ -194,7 +187,7 @@ myVoiceIt.encapsulatedVideoEnrollment(Activity, "USER_ID_HERE", "CONTENT_LANGUAG
 
 #### Encapsulated Video Verification
 
-Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and a boolean to enable liveness detection.
+Verify user with given userId(begins with 'usr_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me".
 
 ```java
 myVoiceIt.encapsulatedVideoVerification(Activity, "USER_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, new JsonHttpResponseHandler() {...});
@@ -207,7 +200,7 @@ myVoiceIt.encapsulatedVideoVerification(Activity, "USER_ID_HERE", "CONTENT_LANGU
 
 #### Encapsulated Video Identification
 
-Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me", and a boolean to enable liveness detection.
+Identify user from given groupId(begins with 'grp_'), contentLanguage('en-US','es-ES' etc.), a given phrase such as "my face and voice identify me".
 
 ```java
 myVoiceIt.encapsulatedVideoIdentification(Activity, "GROUP_ID_HERE", "CONTENT_LANGUAGE_HERE", "PHRASE_HERE", true, new JsonHttpResponseHandler() {...});
