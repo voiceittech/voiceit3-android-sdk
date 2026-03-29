@@ -37,7 +37,7 @@ Contact us at <a href="mailto:support@voiceit.tech" target="_blank">support@voic
 
 ## Requirements
 #### SDK Version
-The minumum Android SDK version (API level) should be set to 17 in your build.gradle file: 
+The minimum Android SDK version (API level) should be set to 17 in your build.gradle file: 
 ```
 minSdkVersion: 17
 ```
@@ -223,7 +223,7 @@ myVoiceIt.checkUserExists("USER_ID_HERE", new JsonHttpResponseHandler() {...});
 
 ## Strings and Prompts
 
-All strings and prompts utilized in the encapsulated views can be overwitten by adding strings with the same names as found in:
+All strings and prompts utilized in the encapsulated views can be overwritten by adding strings with the same names as found in:
 ```
 /voiceit3/src/main/res/values/strings.xml
 ```
