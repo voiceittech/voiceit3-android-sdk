@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="ES_app_name">API_2_SDK</string>
+    <string name="ES_app_name">VoiceIt3 SDK</string>
 
     <string name="ES_SAY_PASSPHRASE">Por favor di \"%1$s\"</string>
     <string name="ES_INCORRECT_PASSPHRASE">Frase de contraseña incorrecta. Por favor say \"%1$s\"</string>
