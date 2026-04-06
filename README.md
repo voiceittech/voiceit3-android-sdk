@@ -1,7 +1,7 @@
 <img src="Graphics/android.png" width="100%" style="width:100%">
 
 [![Build](https://github.com/voiceittech/VoiceIt3-AndroidSDK/actions/workflows/test.yml/badge.svg)](https://github.com/voiceittech/VoiceIt3-AndroidSDK/actions/workflows/test.yml)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025e8c?logo=dependabot)](https://github.com/voiceittech/VoiceIt3-AndroidSDK/security/dependabot)
+[![Dependabot](https://img.shields.io/badge/dependabot-100%25-025e8c?logo=dependabot)](https://github.com/voiceittech/VoiceIt3-AndroidSDK/security/dependabot)
 [![Version](https://img.shields.io/badge/version-2.3.2-blue)](https://github.com/voiceittech/VoiceIt3-AndroidSDK)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/voiceittech/VoiceIt3-AndroidSDK/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2021%2B-brightgreen)](https://github.com/voiceittech/VoiceIt3-AndroidSDK)
