@@ -59,7 +59,33 @@ android.enableJetifier=true
 
 ## Installation
 
-Add the SDK as a module from GitHub:
+### Via GitHub Packages (recommended)
+
+Add the GitHub Packages Maven repository to your project's `settings.gradle`:
+
+```groovy
+dependencyResolutionManagement {
+    repositories {
+        maven {
+            url = uri("https://maven.pkg.github.com/voiceittech/voiceit3-androidsdk")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") ?: ""
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") ?: ""
+            }
+        }
+    }
+}
+```
+
+Then add the dependency to your app's `build.gradle`:
+
+```groovy
+dependencies {
+    implementation 'com.voiceittech:voiceit3-androidsdk:3.0.0'
+}
+```
+
+### Via source
 
 1. Clone the repo: `git clone https://github.com/voiceittech/voiceit3-androidsdk.git`
 2. In Android Studio, go to **File > New > Import Module**
