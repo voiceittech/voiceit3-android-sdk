@@ -1,4 +1,18 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.voiceittech'
+                artifactId = 'VoiceIt3-AndroidSDK'
+                version = '2.4.0'
+            }
+        }
+    }
+}
 
 android {
     namespace "com.voiceit.voiceit3"
