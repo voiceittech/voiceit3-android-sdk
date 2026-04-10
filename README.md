@@ -1,4 +1,4 @@
-<img src="./Graphics/android.png" width="100%" style="width:100%">
+<img src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/android.png" width="100%" style="width:100%">
 
 [![Build](https://github.com/voiceittech/voiceit3-androidsdk/actions/workflows/test.yml/badge.svg)](https://github.com/voiceittech/voiceit3-androidsdk/actions/workflows/test.yml)
 [![Dependabot](https://img.shields.io/github/issues-pr/voiceittech/voiceit3-androidsdk/dependencies?label=dependabot&logo=dependabot&color=025e8c)](https://github.com/voiceittech/voiceit3-androidsdk/pulls?q=is%3Apr+label%3Adependencies)
@@ -30,14 +30,14 @@ A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring V
 The following show Voice Verification, Face Verification, and Video Verification.
 
 <div style="background: #000 !important;">
-  <img width="290px" src="./Graphics/voiceVerification.png?v=2" style="display: inline-block !important"/><img width="290px" src="./Graphics/faceVerification.png?v=2" style="display: inline-block !important;"/><img width="290px" src="./Graphics/videoVerification.png?v=2" style="display: inline-block !important;"/>
+  <img width="290px" src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/voiceVerification.png?v=2" style="display: inline-block !important"/><img width="290px" src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/faceVerification.png?v=2" style="display: inline-block !important;"/><img width="290px" src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/videoVerification.png?v=2" style="display: inline-block !important;"/>
 </div>
 
 ## Getting Started
 
 Sign up at [voiceit.io/pricing](https://voiceit.io/pricing) to get your API Key and Token, then log in to the [Dashboard](https://dashboard.voiceit.io) to manage your account.
 
-<img src="./Graphics/getcredentials.png" alt="API Key and Token" width="400px" />
+<img src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/getcredentials.png" alt="API Key and Token" width="400px" />
 
 ## Requirements
 #### SDK Version
