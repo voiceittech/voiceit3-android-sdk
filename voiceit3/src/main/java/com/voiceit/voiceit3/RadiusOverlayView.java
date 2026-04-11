@@ -350,14 +350,20 @@ class RadiusOverlayView extends LinearLayout {
 
         } else { // Draw portrait
 
-            // Draw rect inverted circle
+            // Draw rect with rounded rectangle cutout (matching iOS SDK)
+            float cornerRadius = circleRadius * 0.064f;
             canvas.drawRect(screenRectangle, invertedCirclePaint);
 
-            // Draw inverted circle
-            canvas.drawCircle(circleCenterX, circleCenterY, circleRadius, invertedCirclePaint);
+            // Draw rounded rectangle cutout
+            RectF roundedRect = new RectF(
+                    circleCenterX - circleRadius,
+                    circleCenterY - circleRadius,
+                    circleCenterX + circleRadius,
+                    circleCenterY + circleRadius);
+            canvas.drawRoundRect(roundedRect, cornerRadius, cornerRadius, invertedCirclePaint);
 
             final double mRecordingDuration = 4800; // ~4.8 seconds
-            // Draw progress circle
+            // Draw progress rounded rectangle
             if (mDrawingProgressCircle) {
                 double elapsedTime = System.currentTimeMillis() - mDrawingProgressCircleStartTime;
                 if (elapsedTime <= mRecordingDuration) {
@@ -371,10 +377,10 @@ class RadiusOverlayView extends LinearLayout {
 
             final RectF portrait = new RectF();
             portrait.set(circleCenterX - circleRadius, circleCenterY - circleRadius, circleCenterX + circleRadius, circleCenterY + circleRadius);
-            Path circlePath = new Path();
+            Path progressPath = new Path();
             // Start at the top and go clockwise
-            circlePath.arcTo(portrait, (float) mProgressCircleStartAngle, (float) mProgressCircleEndAngle, true);
-            canvas.drawPath(circlePath, progressCirclePaint);
+            progressPath.arcTo(portrait, (float) mProgressCircleStartAngle, (float) mProgressCircleEndAngle, true);
+            canvas.drawPath(progressPath, progressCirclePaint);
         }
 
         // Skip processing and displaying text if empty
