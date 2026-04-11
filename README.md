@@ -26,6 +26,14 @@ A fully comprehensive SDK that gives you access to VoiceIt's API 3.0 featuring V
 * [Theme](#setting-the-theme)
 
 
+## Example App
+
+The SDK includes a built-in example app demonstrating all enrollment and verification features.
+
+<div>
+  <img width="290px" src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/demo_top.png" style="display: inline-block !important;"/><img width="290px" src="https://raw.githubusercontent.com/voiceittech/voiceit3-androidsdk/main/Graphics/demo_bottom.png" style="display: inline-block !important;"/>
+</div>
+
 ## UI Screenshots
 The following show Voice Verification, Face Verification, and Video Verification.
 
