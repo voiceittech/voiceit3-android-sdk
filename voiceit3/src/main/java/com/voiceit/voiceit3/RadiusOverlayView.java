@@ -218,7 +218,7 @@ class RadiusOverlayView extends LinearLayout {
         // overlay
         screenRectangle = new RectF(0, 0, mViewWidth, mViewHeight);
 
-        portraitHeight = (int) (mViewHeight * .8);
+        portraitHeight = (int) (mViewHeight * .7);
 
         // rect inverted circle overlay
         invertedCirclePaint.setColor(getResources().getColor(R.color.portraitBackground));
@@ -237,8 +237,9 @@ class RadiusOverlayView extends LinearLayout {
         progressCirclePaint.setStrokeWidth(getContext().getResources().getDisplayMetrics().density * 10);
         progressCirclePaint.setColor(getResources().getColor(R.color.progressCircle));
 
-        // text color
+        // text color and style
         textPaint.setColor(getResources().getColor(R.color.instructionalText));
+        textPaint.setFakeBoldText(true);
     }
 
     public void setPicture(byte[] data) {
