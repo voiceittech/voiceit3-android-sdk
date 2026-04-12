@@ -24,7 +24,7 @@
     <string name="MOVE_CLOSER">Please move closer to the camera</string>
 
     <string name="FNFD">Sorry, we couldn\'t quite see your face. Please try again.</string>
-    <string name="DDNE">Sorry, something went wrong.Please try again.</string>
+    <string name="DDNE">Sorry, something went wrong. Please try again.</string>
     <string name="FAIL">Failed to verify due to low confidence. Please try again.</string>
     <string name="IFWD">Sorry, something went wrong.\nPlease try again.</string>
     <string name="TVER">Sorry, no video enrollments detected.\nPlease enroll and try again.</string>
