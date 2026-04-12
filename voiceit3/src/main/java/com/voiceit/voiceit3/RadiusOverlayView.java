@@ -412,8 +412,8 @@ class RadiusOverlayView extends LinearLayout {
             int textArea = textBounds.get(0).height() * textBounds.get(0).width();
             int textBoxArea = (mViewHeight - portraitHeight - paddingHeight) * (mViewWidth - paddingWidth);
 
-            // To scale for max text size on different phones
-            float maxTextSize = getContext().getResources().getDisplayMetrics().density * 40;
+            // To scale for max text size on different phones (matches iOS 32pt)
+            float maxTextSize = getContext().getResources().getDisplayMetrics().density * 32;
 
             // Rescale text to fit area of text box
             while (textArea < (textBoxArea - (paddingWidth * paddingHeight)) && textSize < maxTextSize) {
