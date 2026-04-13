@@ -9,21 +9,19 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.WindowManager;
 
-import java.io.File;
-
-import com.loopj.android.http.JsonHttpResponseHandler;
-import cz.msebera.android.httpclient.Header;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
 
 public class VoiceVerificationView extends AppCompatActivity {
 
@@ -51,12 +49,10 @@ public class VoiceVerificationView extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
-
         super.onCreate(savedInstanceState);
 
-        // Grab data from parent activity
         Bundle bundle = getIntent().getExtras();
-        if(bundle != null) {
+        if (bundle != null) {
             mVoiceIt3 = new VoiceItAPI3(bundle.getString("apiKey"), bundle.getString("apiToken"));
             mUserId = bundle.getString("userId");
             mVoiceIt3.setNotificationURL(bundle.getString("notificationURL"));
@@ -65,71 +61,54 @@ public class VoiceVerificationView extends AppCompatActivity {
             this.voiceitThemeColor = bundle.getInt("voiceitThemeColor");
             if (this.voiceitThemeColor == 0) {
                 this.voiceitThemeColor = getResources().getColor(R.color.waveform);
-                // color is a valid color
             }
         }
 
-        // Hide action bar
         try {
-            this.getSupportActionBar().hide();
+            getSupportActionBar().hide();
         } catch (NullPointerException e) {
-            Log.d(mTAG,"Cannot hide action bar");
+            Log.d(mTAG, "Cannot hide action bar");
         }
 
-        // Set context
         mContext = this;
-        // Set content view
         setContentView(R.layout.activity_voice_verification_view);
-
-        // Get overlay
         mOverlay = findViewById(R.id.overlay);
-        // Setup toolbar
+
         ((android.widget.TextView) findViewById(R.id.toolbarTitle)).setText("Verifying Voice");
-        findViewById(R.id.cancelButton).setOnClickListener(v -> { exitViewWithMessage("voiceit-failure", "User cancelled"); });
+        findViewById(R.id.cancelButton).setOnClickListener(
+                v -> exitViewWithMessage("voiceit-failure", "User cancelled"));
 
-
-        // Lock orientation
         if (Build.VERSION.SDK_INT >= 18) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
         } else {
-            setRequestedOrientation(Utils.lockOrientationCode(getWindowManager().getDefaultDisplay().getRotation()));
+            setRequestedOrientation(Utils.lockOrientationCode(
+                    getWindowManager().getDefaultDisplay().getRotation()));
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     private void requestHardwarePermissions() {
-        int PERMISSIONS_REQUEST_RECORD_AUDIO = 0;
-        int ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 1;
-        // MY_PERMISSIONS_REQUEST_* is an app-defined int constant. The callback method gets the
-        // result of the request.
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        final int ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 1;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{ Manifest.permission.RECORD_AUDIO},
-                        ASK_MULTIPLE_PERMISSION_REQUEST_CODE);
-            } else {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
-                            PERMISSIONS_REQUEST_RECORD_AUDIO);
-                }
-            }
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    ASK_MULTIPLE_PERMISSION_REQUEST_CODE);
         } else {
-            // Permissions granted, so continue with view
             verifyUser();
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-            Log.d(mTAG,"Hardware Permissions not granted");
+            Log.d(mTAG, "Hardware Permissions not granted");
             exitViewWithMessage("voiceit-failure", "Hardware Permissions not granted");
         } else {
-            // Permissions granted, so continue with view
             verifyUser();
         }
     }
@@ -142,8 +121,8 @@ public class VoiceVerificationView extends AppCompatActivity {
         JSONObject json = new JSONObject();
         try {
             json.put("message", message);
-        } catch(JSONException e) {
-            Log.d(mTAG,"JSON Exception : " + e.getMessage());
+        } catch (JSONException e) {
+            Log.d(mTAG, "JSON Exception: " + e.getMessage());
         }
         intent.putExtra("Response", json.toString());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -170,14 +149,13 @@ public class VoiceVerificationView extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Confirm permissions and start enrollment flow
         requestHardwarePermissions();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if(mContinueVerifying) {
+        if (mContinueVerifying) {
             exitViewWithMessage("voiceit-failure", "User Canceled");
         }
     }
@@ -199,294 +177,185 @@ public class VoiceVerificationView extends AppCompatActivity {
     private void failVerification(final JSONObject response) {
         mOverlay.setProgressCircleColor(getResources().getColor(R.color.failure));
         mOverlay.updateDisplayText("VERIFY_FAIL");
-
-        // Wait for ~1.5 seconds
-        timingHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        timingHandler.postDelayed(() -> {
+            try {
+                if (response.getString("responseCode").equals("PDNM")) {
+                    mOverlay.updateDisplayText(response.getString("responseCode"), mPhrase);
+                } else {
+                    mOverlay.updateDisplayText(response.getString("responseCode"));
+                }
+            } catch (JSONException e) {
+                Log.d(mTAG, "JSON exception: " + e);
+            }
+            timingHandler.postDelayed(() -> {
                 try {
-                    // Report error to user
-                    if (response.getString("responseCode").equals("PDNM")) {
-                        mOverlay.updateDisplayText(response.
-                                getString("responseCode"), mPhrase);
-                    } else {
-                        mOverlay.updateDisplayText(response.
-                                getString("responseCode"));
+                    if (response.getString("responseCode").equals("PNTE")) {
+                        exitViewWithJSON("voiceit-failure", response);
+                        return;
                     }
                 } catch (JSONException e) {
-                    Log.d(mTAG,"JSON exception : " + e.toString());
+                    Log.d(mTAG, "JSON exception: " + e);
                 }
-                // Wait for ~4.5 seconds
-                timingHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (response.getString("responseCode").equals("PNTE")) {
-                                exitViewWithJSON("voiceit-failure", response);
-                            }
-                        } catch (JSONException e) {
-                            Log.d(mTAG,"JSON exception : " + e.toString());
-                        }
-
-                        mFailedAttempts++;
-                        // User failed too many times
-                        if (mFailedAttempts >= mMaxFailedAttempts) {
-                            mOverlay.updateDisplayText("TOO_MANY_ATTEMPTS");
-                            // Wait for ~2 seconds then exit
-                            timingHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    exitViewWithJSON("voiceit-failure", response);
-                                }
-                            }, 2000);
-                        } else if (mContinueVerifying) {
-                            // Try again
-                            recordVoice();
-                        }
-                    }
-                }, 4500);
-            }
+                mFailedAttempts++;
+                if (mFailedAttempts >= mMaxFailedAttempts) {
+                    mOverlay.updateDisplayText("TOO_MANY_ATTEMPTS");
+                    timingHandler.postDelayed(
+                            () -> exitViewWithJSON("voiceit-failure", response),
+                            2000);
+                } else if (mContinueVerifying) {
+                    recordVoice();
+                }
+            }, 4500);
         }, 1500);
     }
 
-    private long redrawWaveform(){
-        final long currentTime = System.currentTimeMillis();
+    private void handleNetworkFailure(JSONObject errorBody) {
+        if (errorBody != null) {
+            try {
+                mOverlay.updateDisplayText(errorBody.getString("responseCode"));
+            } catch (JSONException e) {
+                Log.d(mTAG, "JSON exception: " + e);
+            }
+            timingHandler.postDelayed(
+                    () -> exitViewWithJSON("voiceit-failure", errorBody),
+                    2000);
+        } else {
+            Log.e(mTAG, "No response from server");
+            mOverlay.updateDisplayTextAndLock("CHECK_INTERNET");
+            timingHandler.postDelayed(
+                    () -> exitViewWithMessage("voiceit-failure", "No response from server"),
+                    2000);
+        }
+    }
 
-        runOnUiThread(new Runnable() {
-            public void run() {
-                if (mMediaRecorder != null) {
-                    mOverlay.setWaveformMaxAmplitude(mMediaRecorder.getMaxAmplitude());
-                }
+    private long redrawWaveform() {
+        final long currentTime = System.currentTimeMillis();
+        runOnUiThread(() -> {
+            if (mMediaRecorder != null) {
+                mOverlay.setWaveformMaxAmplitude(mMediaRecorder.getMaxAmplitude());
             }
         });
-
         return System.currentTimeMillis() - currentTime;
     }
 
-    // Verify after recording voice
     private void recordVoice() {
-        if (mContinueVerifying) {
+        if (!mContinueVerifying) return;
 
-            mOverlay.updateDisplayText("SAY_PASSPHRASE", mPhrase);
-            try {
-                // Create file for audio
-                final File audioFile = Utils.getOutputMediaFile(".wav");
-                if (audioFile == null) {
-                    exitViewWithMessage("voiceit-failure", "Creating audio file failed");
-                }
-
-                // Setup device and capture Audio
-                mMediaRecorder = new MediaRecorder();
-                Utils.startMediaRecorder(mMediaRecorder, audioFile);
-
-                // Start displaying waveform
-                displayWaveform = true;
-                new Thread(new Runnable() {
-                    public void run() {
-                        while (displayWaveform) {
-                            try {
-                                Thread.sleep(Math.max(0, REFRESH_WAVEFORM_INTERVAL_MS - redrawWaveform()));
-                            } catch (Exception e) {
-                                Log.d(mTAG, "MediaRecorder getMaxAmplitude Exception: " + e.getMessage());
-                            }
-                        }
-                    }
-                }).start();
-
-                // Record and update amplitude display for ~5 seconds, then send data
-                // 4800ms to make sure recording is not over 5 seconds
-                timingHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        // Stop waveform
-                        displayWaveform = false;
-
-                        if (mContinueVerifying) {
-                            stopRecording();
-
-                            // Reset sine wave
-                            mOverlay.setWaveformMaxAmplitude(1);
-
-                            mOverlay.updateDisplayText("WAIT");
-                            mVoiceIt3.voiceVerification(mUserId, mContentLanguage, mPhrase, audioFile, new JsonHttpResponseHandler() {
-                                @Override
-                                public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
-                                    try {
-                                        if (response.getString("responseCode").equals("SUCC")) {
-                                            mOverlay.setProgressCircleColor(getResources().getColor(R.color.success));
-                                            mOverlay.updateDisplayTextAndLock("VERIFY_SUCCESS");
-
-                                            // Wait for ~2 seconds then exit
-                                            timingHandler.postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    audioFile.deleteOnExit();
-                                                    exitViewWithJSON("voiceit-success", response);
-                                                }
-                                            }, 2000);
-                                            // Fail
-                                        } else {
-                                            audioFile.deleteOnExit();
-                                            failVerification(response);
-                                        }
-                                    } catch (JSONException e) {
-                                        Log.d(mTAG, "JSON Exception: " + e.getMessage());
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse) {
-                                    if (errorResponse != null) {
-                                        Log.d(mTAG, "JSONResult : " + errorResponse.toString());
-
-                                        audioFile.deleteOnExit();
-                                        failVerification(errorResponse);
-                                    } else {
-                                        Log.e(mTAG, "No response from server");
-                                        mOverlay.updateDisplayTextAndLock("CHECK_INTERNET");
-                                        // Wait for 2.0 seconds
-                                        timingHandler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                exitViewWithMessage("voiceit-failure", "No response from server");
-                                            }
-                                        }, 2000);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }, 4800);
-
-            } catch (Exception ex) {
-                Log.d(mTAG, "Recording Error: " + ex.getMessage());
-                exitViewWithMessage("voiceit-failure", "Recording Error");
+        mOverlay.updateDisplayText("SAY_PASSPHRASE", mPhrase);
+        try {
+            final File audioFile = Utils.getOutputMediaFile(".wav");
+            if (audioFile == null) {
+                exitViewWithMessage("voiceit-failure", "Creating audio file failed");
+                return;
             }
+
+            mMediaRecorder = new MediaRecorder();
+            Utils.startMediaRecorder(mMediaRecorder, audioFile);
+
+            displayWaveform = true;
+            new Thread(() -> {
+                while (displayWaveform) {
+                    try {
+                        Thread.sleep(Math.max(0, REFRESH_WAVEFORM_INTERVAL_MS - redrawWaveform()));
+                    } catch (Exception e) {
+                        Log.d(mTAG, "MediaRecorder getMaxAmplitude Exception: " + e.getMessage());
+                    }
+                }
+            }).start();
+
+            timingHandler.postDelayed(() -> {
+                displayWaveform = false;
+                if (!mContinueVerifying) return;
+
+                stopRecording();
+                mOverlay.setWaveformMaxAmplitude(1);
+                mOverlay.updateDisplayText("WAIT");
+
+                mVoiceIt3.voiceVerification(mUserId, mContentLanguage, mPhrase, audioFile,
+                        new Callback() {
+                            @Override
+                            public void onSuccess(JSONObject response) {
+                                try {
+                                    if (response.getString("responseCode").equals("SUCC")) {
+                                        mOverlay.setProgressCircleColor(
+                                                getResources().getColor(R.color.success));
+                                        mOverlay.updateDisplayTextAndLock("VERIFY_SUCCESS");
+                                        timingHandler.postDelayed(() -> {
+                                            audioFile.deleteOnExit();
+                                            exitViewWithJSON("voiceit-success", response);
+                                        }, 2000);
+                                    } else {
+                                        audioFile.deleteOnExit();
+                                        failVerification(response);
+                                    }
+                                } catch (JSONException e) {
+                                    Log.d(mTAG, "JSON Exception: " + e.getMessage());
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, JSONObject errorBody, Throwable error) {
+                                if (errorBody != null) {
+                                    audioFile.deleteOnExit();
+                                    failVerification(errorBody);
+                                } else {
+                                    Log.e(mTAG, "No response from server");
+                                    mOverlay.updateDisplayTextAndLock("CHECK_INTERNET");
+                                    timingHandler.postDelayed(() -> exitViewWithMessage(
+                                            "voiceit-failure", "No response from server"), 2000);
+                                }
+                            }
+                        });
+            }, 4800);
+        } catch (Exception ex) {
+            Log.d(mTAG, "Recording Error: " + ex.getMessage());
+            exitViewWithMessage("voiceit-failure", "Recording Error");
         }
     }
 
     private void verifyUser() {
         mContinueVerifying = true;
-        // Check enrollments then verify
-        mVoiceIt3.getAllVoiceEnrollments(mUserId, new JsonHttpResponseHandler() {
+        mVoiceIt3.getAllVoiceEnrollments(mUserId, new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
+            public void onSuccess(JSONObject response) {
                 try {
-                    // Check If enough enrollments, otherwise return to previous activity
-                    if(response.getInt("count") < mNeededEnrollments) {
-                        mVoiceIt3.getAllVideoEnrollments(mUserId, new JsonHttpResponseHandler() {
+                    if (response.getInt("count") < mNeededEnrollments) {
+                        // Fall back to checking video enrollments
+                        mVoiceIt3.getAllVideoEnrollments(mUserId, new Callback() {
                             @Override
-                            public void onSuccess(int statusCode, Header[] headers, final JSONObject response) {
+                            public void onSuccess(JSONObject response2) {
                                 try {
-                                    // Check If enough enrollments, otherwise return to previous activity
-                                    if(response.getInt("count") < mNeededEnrollments) {
+                                    if (response2.getInt("count") < mNeededEnrollments) {
                                         mOverlay.updateDisplayText("NOT_ENOUGH_ENROLLMENTS");
-                                        // Wait for ~2.5 seconds
-                                        timingHandler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                exitViewWithMessage("voiceit-failure", "Not enough enrollments");
-                                            }
-                                        }, 2500);
+                                        timingHandler.postDelayed(() -> exitViewWithMessage(
+                                                "voiceit-failure", "Not enough enrollments"),
+                                                2500);
                                     } else {
-                                        try {
-                                            // Wait for .5 seconds to read message
-                                            timingHandler.postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // Record Voice then verify
-                                                    recordVoice();
-                                                }
-                                            }, 500);
-                                        } catch (Exception e) {
-                                            Log.d(mTAG,"MediaRecorder exception : " + e.getMessage());
-                                            exitViewWithMessage("voiceit-failure", "MediaRecorder exception");
-                                        }
+                                        timingHandler.postDelayed(VoiceVerificationView.this::recordVoice, 500);
                                     }
                                 } catch (JSONException e) {
-                                    Log.d(mTAG,"JSON userId error: " + e.getMessage());
+                                    Log.d(mTAG, "JSON userId error: " + e.getMessage());
                                     exitViewWithMessage("voiceit-failure", "JSON userId error");
                                 }
                             }
+
                             @Override
-                            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse){
-                                if (errorResponse != null) {
-                                    try {
-                                        // Report error to user
-                                        mOverlay.updateDisplayText(errorResponse.
-                                                getString("responseCode"));
-                                    } catch (JSONException e) {
-                                        Log.d(mTAG,"JSON exception : " + e.toString());
-                                    }
-                                    // Wait for 2.0 seconds
-                                    timingHandler.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            exitViewWithJSON("voiceit-failure", errorResponse);
-                                        }
-                                    }, 2000);
-                                } else {
-                                    Log.e(mTAG, "No response from server");
-                                    mOverlay.updateDisplayTextAndLock("CHECK_INTERNET");
-                                    // Wait for 2.0 seconds
-                                    timingHandler.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            exitViewWithMessage("voiceit-failure", "No response from server");
-                                        }
-                                    }, 2000);
-                                }
+                            public void onFailure(int statusCode, JSONObject errorBody, Throwable error) {
+                                handleNetworkFailure(errorBody);
                             }
                         });
                     } else {
-                        try {
-                            // Wait for .5 seconds to read message
-                            timingHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    // Record Voice then verify
-                                    recordVoice();
-                                }
-                            }, 500);
-                        } catch (Exception e) {
-                            Log.d(mTAG,"MediaRecorder exception : " + e.getMessage());
-                            exitViewWithMessage("voiceit-failure", "MediaRecorder exception");
-                        }
+                        timingHandler.postDelayed(VoiceVerificationView.this::recordVoice, 500);
                     }
                 } catch (JSONException e) {
-                    Log.d(mTAG,"JSON userId error: " + e.getMessage());
+                    Log.d(mTAG, "JSON userId error: " + e.getMessage());
                     exitViewWithMessage("voiceit-failure", "JSON userId error");
                 }
             }
+
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, final JSONObject errorResponse){
-                if (errorResponse != null) {
-                    try {
-                        // Report error to user
-                        mOverlay.updateDisplayText(errorResponse.
-                                getString("responseCode"));
-                    } catch (JSONException e) {
-                        Log.d(mTAG,"JSON exception : " + e.toString());
-                    }
-                    // Wait for 2.0 seconds
-                    timingHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exitViewWithJSON("voiceit-failure", errorResponse);
-                        }
-                    }, 2000);
-                } else {
-                    Log.e(mTAG, "No response from server");
-                    mOverlay.updateDisplayTextAndLock("CHECK_INTERNET");
-                    // Wait for 2.0 seconds
-                    timingHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exitViewWithMessage("voiceit-failure", "No response from server");
-                        }
-                    }, 2000);
-                }
+            public void onFailure(int statusCode, JSONObject errorBody, Throwable error) {
+                handleNetworkFailure(errorBody);
             }
         });
     }

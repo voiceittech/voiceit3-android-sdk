@@ -8,12 +8,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.voiceit.voiceit3.Callback;
 import com.voiceit.voiceit3.VoiceItAPI3;
 
 import org.json.JSONObject;
-
-import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
         languageSpinner = findViewById(R.id.languageSpinner);
 
         String[] languages = {"en-US", "es-ES", "no-STT"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, languages);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, languages);
         languageSpinner.setAdapter(adapter);
 
         findViewById(R.id.voiceEnrollBtn).setOnClickListener(v -> doVoiceEnrollment());
@@ -69,88 +68,55 @@ public class MainActivity extends AppCompatActivity {
     private String getPhrase() { return getText(phraseInput); }
     private String getLanguage() { return languageSpinner.getSelectedItem().toString(); }
 
+    /** Reusable callback that shows the result in a dialog. */
+    private Callback resultCallback(final String label) {
+        return new Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                showResult(label + " successful!\n" + response.toString());
+            }
+
+            @Override
+            public void onFailure(int statusCode, JSONObject errorBody, Throwable error) {
+                showResult(label + " failed" + formatError(errorBody));
+            }
+        };
+    }
+
     private void doVoiceEnrollment() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedVoiceEnrollment(this, getUserId(), getLanguage(), getPhrase(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Voice enrollment successful!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Voice enrollment failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedVoiceEnrollment(this, getUserId(), getLanguage(), getPhrase(),
+                resultCallback("Voice enrollment"));
     }
 
     private void doFaceEnrollment() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedFaceEnrollment(this, getUserId(), getLanguage(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Face enrollment successful!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Face enrollment failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedFaceEnrollment(this, getUserId(), getLanguage(),
+                resultCallback("Face enrollment"));
     }
 
     private void doVideoEnrollment() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedVideoEnrollment(this, getUserId(), getLanguage(), getPhrase(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Video enrollment successful!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Video enrollment failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedVideoEnrollment(this, getUserId(), getLanguage(), getPhrase(),
+                resultCallback("Video enrollment"));
     }
 
     private void doVoiceVerification() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedVoiceVerification(this, getUserId(), getLanguage(), getPhrase(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Voice verified!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Voice verification failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedVoiceVerification(this, getUserId(), getLanguage(), getPhrase(),
+                resultCallback("Voice verification"));
     }
 
     private void doFaceVerification() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedFaceVerification(this, getUserId(), getLanguage(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Face verified!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Face verification failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedFaceVerification(this, getUserId(), getLanguage(),
+                resultCallback("Face verification"));
     }
 
     private void doVideoVerification() {
         if (!initSDK()) return;
-        myVoiceIt.encapsulatedVideoVerification(this, getUserId(), getLanguage(), getPhrase(), new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                showResult("Video verified!\n" + response.toString());
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                showResult("Video verification failed" + formatError(errorResponse));
-            }
-        });
+        myVoiceIt.encapsulatedVideoVerification(this, getUserId(), getLanguage(), getPhrase(),
+                resultCallback("Video verification"));
     }
 
     private void showResult(String message) {

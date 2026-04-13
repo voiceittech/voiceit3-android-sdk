@@ -16,7 +16,7 @@
         view_type:view_type="face"
         tools:context="com.voiceit.voiceit3.FaceEnrollmentView">
 
-        <com.voiceit.voiceit3.CameraSourcePreview
+        <androidx.camera.view.PreviewView
             android:id="@+id/camera_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

@@ -21,8 +21,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.LinearLayout;
 
-import com.google.android.gms.vision.face.Face;
-
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -256,14 +254,21 @@ class RadiusOverlayView extends LinearLayout {
         // Flip over X axis
         matrix.postScale(-1, 1, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
 
-        // Scale to preview size based off orientation
-        if (CameraSourcePreview.isPortraitMode(getContext())) {
-            matrix.postScale( ((float) CameraSourcePreview.childHeight) / bitmap.getWidth(),
-                    ((float) CameraSourcePreview.childWidth) / bitmap.getHeight());
+        // Scale to this view's bounds. CameraX's PreviewView lives inside
+        // RadiusOverlayView, so the overlay's measured dimensions are the
+        // right reference (the previously-deleted CameraSourcePreview kept
+        // its own static childWidth/childHeight; we no longer need that).
+        boolean portrait = getContext().getResources().getConfiguration().orientation
+                == android.content.res.Configuration.ORIENTATION_PORTRAIT;
+        int targetW = mViewWidth > 0 ? mViewWidth : bitmap.getWidth();
+        int targetH = mViewHeight > 0 ? mViewHeight : bitmap.getHeight();
+        if (portrait) {
+            matrix.postScale(((float) targetH) / bitmap.getWidth(),
+                    ((float) targetW) / bitmap.getHeight());
             matrix.postRotate(90);
         } else {
-            matrix.postScale( ((float) CameraSourcePreview.childWidth) / bitmap.getWidth(),
-                    ((float) CameraSourcePreview.childHeight) / bitmap.getHeight());
+            matrix.postScale(((float) targetW) / bitmap.getWidth(),
+                    ((float) targetH) / bitmap.getHeight());
         }
 
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -466,24 +471,42 @@ class RadiusOverlayView extends LinearLayout {
         }
     }
 
-    public boolean insidePortraitCircle(Activity activity, Face face) {
+    /**
+     * Returns true when the detected face is inside the on-screen overlay
+     * circle and large enough relative to the circle radius.
+     *
+     * Coordinates: the bounding box {@code bbox} comes from ML Kit in the
+     * coordinate space of the analyzed image (post-rotation), with width
+     * {@code imageWidth} and height {@code imageHeight}. The view is mapped
+     * to those dimensions by aspect-fitting; the front camera preview is
+     * mirrored horizontally, so x is flipped on conversion.
+     */
+    public boolean insidePortraitCircle(Activity activity, Rect bbox,
+                                        int imageWidth, int imageHeight) {
+        if (bbox == null || imageWidth <= 0 || imageHeight <= 0) return false;
 
-        final float faceX = (float)mViewWidth - (face.getPosition().x + face.getWidth() / 2)
-                * (float)mViewWidth / (float)CameraSourcePreview.previewWidth;
-        final float faceY = (face.getPosition().y + face.getHeight() / 2)
-                * (float)mViewHeight / (float)CameraSourcePreview.previewHeight;
+        // Compute the bounding-box centre in image coordinates.
+        final float boxCenterImageX = bbox.left + bbox.width() / 2f;
+        final float boxCenterImageY = bbox.top + bbox.height() / 2f;
+
+        // Map image coordinates to view coordinates. The front camera
+        // preview mirrors x, so we flip it.
+        final float faceX = mViewWidth - boxCenterImageX
+                * (float) mViewWidth / (float) imageWidth;
+        final float faceY = boxCenterImageY
+                * (float) mViewHeight / (float) imageHeight;
+
+        // Map face size to view space (use width as the limiting axis).
+        final float viewFaceWidth = bbox.width()
+                * (float) mViewWidth / (float) imageWidth;
+        final float viewFaceHeight = bbox.height()
+                * (float) mViewHeight / (float) imageHeight;
 
         final float radius = circleRadius * 0.7f;
 
         // Face close enough to camera
-        if(face.getWidth() < (circleRadius/2)
-                || face.getHeight() < (circleRadius/2)) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateDisplayText("MOVE_CLOSER");
-                }
-            });
+        if (viewFaceWidth < (circleRadius / 2) || viewFaceHeight < (circleRadius / 2)) {
+            activity.runOnUiThread(() -> updateDisplayText("MOVE_CLOSER"));
             return false;
         }
 

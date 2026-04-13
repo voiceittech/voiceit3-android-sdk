@@ -10,942 +10,796 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.common.util.JsonUtils;
-import com.loopj.android.http.*;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
+import okhttp3.Credentials;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
+/**
+ * VoiceIt API 3 client. All async methods invoke {@link Callback} on the main
+ * thread.
+ *
+ * Network transport is OkHttp; previous releases used the abandoned
+ * com.loopj.android:android-async-http library. The public API is now built
+ * around the {@link Callback} interface — see migration notes in the README.
+ */
 public class VoiceItAPI3 {
-    private final AsyncHttpClient client;
+    private static final String mTAG = "VoiceItAPI3";
+    /** Reported in the platformVersion header. Keep in sync with the
+     *  voiceit3/build.gradle versionName. */
+    public static final String VERSION = "4.0.0";
+    private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
+
     private final String apiKey;
     private final String apiToken;
+    private final OkHttpClient client;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
     private String notificationURL;
     private int voiceitThemeColor = 0;
-
-    private final String mTAG = "VoiceItAPI3";
     private String BASE_URL = "https://api.voiceit.io";
 
     public boolean mDisplayPreviewFrame = false;
 
     public VoiceItAPI3(String apiKey, String apiToken) {
-        this.apiKey = apiKey;
-        this.apiToken = apiToken;
-        this.client = new AsyncHttpClient();
-        this.client.removeAllHeaders();
-        this.client.setTimeout(30 * 1000);
-        this.client.setBasicAuth(apiKey, apiToken);
-        this.client.addHeader("platformId", "40");
-        this.client.addHeader("platformVersion", BuildConfig.VERSION_NAME);
+        this(apiKey, apiToken, null, 0);
     }
 
     public VoiceItAPI3(String apiKey, String apiToken, String url) {
-        this.apiKey = apiKey;
-        this.apiToken = apiToken;
-        this.client = new AsyncHttpClient();
-        this.client.removeAllHeaders();
-        this.client.setTimeout(30 * 1000);
-        this.client.setBasicAuth(apiKey, apiToken);
-        this.client.addHeader("platformId", "40");
-        this.client.addHeader("platformVersion", BuildConfig.VERSION_NAME);
-        BASE_URL = url;
+        this(apiKey, apiToken, url, 0);
     }
 
     public VoiceItAPI3(String apiKey, String apiToken, int voiceitThemeColor) {
-        this.apiKey = apiKey;
-        this.apiToken = apiToken;
-        this.client = new AsyncHttpClient();
-        this.client.removeAllHeaders();
-        this.client.setTimeout(30 * 1000);
-        this.client.setBasicAuth(apiKey, apiToken);
-        this.client.addHeader("platformId", "40");
-        this.client.addHeader("platformVersion", BuildConfig.VERSION_NAME);
-        this.voiceitThemeColor = voiceitThemeColor;
+        this(apiKey, apiToken, null, voiceitThemeColor);
     }
 
     public VoiceItAPI3(String apiKey, String apiToken, int voiceitThemeColor, String url) {
+        this(apiKey, apiToken, url, voiceitThemeColor);
+    }
+
+    private VoiceItAPI3(String apiKey, String apiToken, String customBaseURL, int voiceitThemeColor) {
         this.apiKey = apiKey;
         this.apiToken = apiToken;
-        this.client = new AsyncHttpClient();
-        this.client.removeAllHeaders();
-        this.client.setTimeout(30 * 1000);
-        this.client.setBasicAuth(apiKey, apiToken);
-        this.client.addHeader("platformId", "40");
-        this.client.addHeader("platformVersion", BuildConfig.VERSION_NAME);
         this.voiceitThemeColor = voiceitThemeColor;
-        BASE_URL = url;
+        if (customBaseURL != null) {
+            BASE_URL = customBaseURL;
+        }
+        final String authHeader = Credentials.basic(apiKey, apiToken);
+        this.client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
+                        .header("Authorization", authHeader)
+                        .header("platformId", "40")
+                        .header("platformVersion", VERSION)
+                        .build()))
+                .build();
     }
 
     public void setURL(String url) {
-      BASE_URL = url.replaceAll("\\s+","");
-    }
-
-    private String getAbsoluteUrl(String relativeUrl) {
-        return BASE_URL + relativeUrl;
-    }
-
-    public void getPhrases(String contentLanguage, AsyncHttpResponseHandler responseHandler) {
-        client.get(getAbsoluteUrl("/phrases/" + contentLanguage + "?notificationURL=" + this.notificationURL), responseHandler);
+        BASE_URL = url.replaceAll("\\s+", "");
     }
 
     public void setNotificationURL(String notificationUrl) {
         this.notificationURL = notificationUrl;
     }
 
-    public void getAllUsers(AsyncHttpResponseHandler responseHandler) {
-        RequestParams params = new RequestParams();
+    // ------------------------------------------------------------------
+    // Internal helpers
+    // ------------------------------------------------------------------
 
-        client.get(getAbsoluteUrl("/users" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createUser(AsyncHttpResponseHandler responseHandler) {
-        RequestParams params = new RequestParams();
-
-        client.post(getAbsoluteUrl("/users" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void checkUserExists(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/users/" + userId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void deleteUser(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.delete(getAbsoluteUrl("/users/" + userId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void getGroupsForUser(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/users/" + userId + "/groups" + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void deleteAllEnrollments(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.delete(getAbsoluteUrl("/enrollments/" + userId + "/all" + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void getAllVoiceEnrollments(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/enrollments/voice/" + userId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void getAllFaceEnrollments(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("notificationURL", this.notificationURL);
-
-        client.get(getAbsoluteUrl("/enrollments/face/" + userId + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void getAllVideoEnrollments(String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/enrollments/video/" + userId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void createVoiceEnrollment(String userId, String contentLanguage, String phrase, String recordingPath, AsyncHttpResponseHandler responseHandler) {
-        createVoiceEnrollment(userId, contentLanguage, phrase, new File(recordingPath), responseHandler);
-    }
-
-    public void createVoiceEnrollment(String userId, String contentLanguage, String phrase, File recording, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-
+    private static String enc(String s) {
         try {
-            params.put("recording", recording);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (Exception e) {
+            // UTF-8 is always supported on Android.
+            throw new AssertionError(e);
         }
-
-        client.post(getAbsoluteUrl("/enrollments/voice" + "?notificationURL=" + this.notificationURL), params, responseHandler);
     }
 
-    public void createVoiceEnrollment(final String userId, final String contentLanguage, final String phrase, final AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
+    /**
+     * Append ?notificationURL=encoded(notificationURL) (or a connecting
+     * &amp;notificationURL=...) to a URL when one has been configured. The
+     * caller passes the URL as it stands; this method picks the right
+     * separator based on whether the URL already contains a query string.
+     */
+    private String withNotification(String url) {
+        if (notificationURL == null || notificationURL.isEmpty()) {
+            return url;
         }
-        try{
-            final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
-            final MediaRecorder myRecorder = new MediaRecorder();
-            Utils.startMediaRecorder(myRecorder, recordingFile);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    myRecorder.stop();
-                    myRecorder.reset();
-                    myRecorder.release();
-                    createVoiceEnrollment(userId, contentLanguage, phrase, recordingFile, responseHandler);
+        String sep = url.contains("?") ? "&" : "?";
+        return url + sep + "notificationURL=" + enc(notificationURL);
+    }
+
+    private String absUrl(String relative) {
+        return BASE_URL + relative;
+    }
+
+    private void executeAsync(Request request, final Callback cb) {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, final IOException e) {
+                postFailure(cb, 0, null, e);
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                final int code = response.code();
+                final ResponseBody body = response.body();
+                final String text = body == null ? "" : body.string();
+                response.close();
+
+                JSONObject json = null;
+                try {
+                    if (!text.isEmpty()) {
+                        json = new JSONObject(text);
+                    }
+                } catch (JSONException ignored) {
+                    // Body wasn't JSON — leave json as null.
                 }
-            }, 4800);
-        }
-        catch (Exception ex) {
-            Log.e(mTAG,"Recording Exception: " + ex.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-        }
+
+                if (response.isSuccessful() && json != null) {
+                    final JSONObject finalJson = json;
+                    mainHandler.post(() -> cb.onSuccess(finalJson));
+                } else {
+                    final JSONObject finalErr = json;
+                    final Throwable err = response.isSuccessful()
+                            ? new IOException("Response was not valid JSON")
+                            : null;
+                    postFailure(cb, code, finalErr, err);
+                }
+            }
+        });
     }
 
-    public void createVoiceEnrollmentByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/enrollments/voice/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
+    private void postFailure(final Callback cb, final int code,
+                             final JSONObject errBody, final Throwable err) {
+        mainHandler.post(() -> cb.onFailure(code, errBody, err));
     }
 
-    public void createFaceEnrollment(String userId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollment(userId, new File(videoPath), responseHandler);
+    private void failValidation(Callback cb) {
+        postFailure(cb, 0, buildJSONFormatMessage(),
+                new IllegalArgumentException("Incorrectly formatted id argument"));
     }
 
-    public void createFaceEnrollment(String userId, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
+    private void doGet(String relative, Callback cb) {
+        executeAsync(new Request.Builder().url(withNotification(absUrl(relative))).get().build(), cb);
+    }
 
+    private void doDelete(String relative, Callback cb) {
+        executeAsync(new Request.Builder().url(withNotification(absUrl(relative))).delete().build(), cb);
+    }
+
+    private void doMultipartPost(String relative, MultipartBody body, Callback cb) {
+        executeAsync(new Request.Builder().url(withNotification(absUrl(relative))).post(body).build(), cb);
+    }
+
+    private void doMultipartPut(String relative, MultipartBody body, Callback cb) {
+        executeAsync(new Request.Builder().url(withNotification(absUrl(relative))).put(body).build(), cb);
+    }
+
+    private static MultipartBody.Builder mb() {
+        return new MultipartBody.Builder().setType(MultipartBody.FORM);
+    }
+
+    private static MultipartBody.Builder withFile(MultipartBody.Builder b,
+                                                  String name, File file) {
+        return b.addFormDataPart(name, file.getName(),
+                RequestBody.create(file, OCTET_STREAM));
+    }
+
+    // ------------------------------------------------------------------
+    // Phrases
+    // ------------------------------------------------------------------
+
+    public void getPhrases(String contentLanguage, Callback cb) {
+        doGet("/phrases/" + enc(contentLanguage), cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Users
+    // ------------------------------------------------------------------
+
+    public void getAllUsers(Callback cb) {
+        doGet("/users", cb);
+    }
+
+    public void createUser(Callback cb) {
+        doMultipartPost("/users", mb().addFormDataPart("_", "_").build(), cb);
+    }
+
+    public void checkUserExists(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doGet("/users/" + enc(userId), cb);
+    }
+
+    public void deleteUser(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doDelete("/users/" + enc(userId), cb);
+    }
+
+    public void getGroupsForUser(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doGet("/users/" + enc(userId) + "/groups", cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Enrollment listing / deletion
+    // ------------------------------------------------------------------
+
+    public void deleteAllEnrollments(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doDelete("/enrollments/" + enc(userId) + "/all", cb);
+    }
+
+    public void getAllVoiceEnrollments(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doGet("/enrollments/voice/" + enc(userId), cb);
+    }
+
+    public void getAllFaceEnrollments(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doGet("/enrollments/face/" + enc(userId), cb);
+    }
+
+    public void getAllVideoEnrollments(String userId, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        doGet("/enrollments/video/" + enc(userId), cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Voice enrollment
+    // ------------------------------------------------------------------
+
+    public void createVoiceEnrollment(String userId, String contentLanguage,
+                                      String phrase, String recordingPath, Callback cb) {
+        createVoiceEnrollment(userId, contentLanguage, phrase, new File(recordingPath), cb);
+    }
+
+    public void createVoiceEnrollment(String userId, String contentLanguage,
+                                      String phrase, File recording, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!recording.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "recording", recording).build();
+        doMultipartPost("/enrollments/voice", body, cb);
+    }
+
+    public void createVoiceEnrollment(final String userId, final String contentLanguage,
+                                      final String phrase, final Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
         try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/enrollments/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createFaceEnrollmentWithPhoto(String userId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        createFaceEnrollmentWithPhoto(userId, new File(photoPath), responseHandler);
-    }
-
-    public void createFaceEnrollmentWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-
-        try {
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/enrollments/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createFaceEnrollmentByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/enrollments/face/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-
-        try {
-            params.put("audio", audio);
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/enrollments/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase,String videoPath, AsyncHttpResponseHandler responseHandler) {
-        createVideoEnrollment(userId, contentLanguage, phrase, new File(videoPath), responseHandler);
-    }
-
-    public void createVideoEnrollment(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/enrollments/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void createVideoEnrollmentByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/enrollments/video/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-
-    }
-
-    public void getAllGroups(AsyncHttpResponseHandler responseHandler) {
-        client.get(getAbsoluteUrl("/groups" + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void getGroup(String groupId, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/groups/" + groupId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void groupExists(String groupId, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.get(getAbsoluteUrl("/groups/" + groupId + "/exists" + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void createGroup(String description, AsyncHttpResponseHandler responseHandler) {
-        RequestParams params = new RequestParams();
-        params.put("description", description);
-
-        client.post(getAbsoluteUrl("/groups" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void addUserToGroup(String groupId, String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId) || !userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("userId", userId);
-
-        client.put(getAbsoluteUrl("/groups/addUser" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void removeUserFromGroup(String groupId, String userId, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId) || !userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.delete(getAbsoluteUrl("/groups/removeUser" + "?groupId=" + groupId + "&userId=" + userId + "&notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void deleteGroup(String groupId, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.delete(getAbsoluteUrl("/groups/" + groupId + "?notificationURL=" + this.notificationURL), responseHandler);
-    }
-
-    public void voiceVerification(String userId, String contentLanguage, String phrase, String recordingPath, AsyncHttpResponseHandler responseHandler) {
-        voiceVerification(userId, contentLanguage,  phrase, new File(recordingPath), responseHandler);
-    }
-
-    public void voiceVerification(String userId, String contentLanguage, String phrase, File recording, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-
-        try {
-            params.put("recording", recording);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        client.post(getAbsoluteUrl("/verification/voice" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void voiceVerification(final String userId, final String contentLanguage, final String phrase, final AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        try{
-            final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
+            final File recordingFile = File.createTempFile("tempEnrollmentFile", ".wav");
             final MediaRecorder myRecorder = new MediaRecorder();
             Utils.startMediaRecorder(myRecorder, recordingFile);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
+            new Handler().postDelayed(() -> {
                 myRecorder.stop();
                 myRecorder.reset();
                 myRecorder.release();
-                voiceVerification(userId, contentLanguage, phrase, recordingFile, responseHandler);
-                }
+                createVoiceEnrollment(userId, contentLanguage, phrase, recordingFile, cb);
             }, 4800);
-        }
-        catch (Exception ex) {
-            Log.e(mTAG,"Recording Error: " + ex.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+        } catch (Exception ex) {
+            Log.e(mTAG, "Recording Exception: " + ex.getMessage());
+            postFailure(cb, 0, buildJSONFormatMessage(), ex);
         }
     }
 
-    public void voiceVerificationByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/verification/voice/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
+    public void createVoiceEnrollmentByUrl(String userId, String contentLanguage,
+                                           String phrase, String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/enrollments/voice/byUrl", body, cb);
     }
 
-    public void faceVerification(String userId, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        faceVerification(userId, new File(videoPath), responseHandler);
+    // ------------------------------------------------------------------
+    // Face enrollment
+    // ------------------------------------------------------------------
+
+    public void createFaceEnrollment(String userId, String videoPath, Callback cb) {
+        createFaceEnrollment(userId, new File(videoPath), cb);
     }
 
-    public void faceVerification(String userId, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
+    public void createFaceEnrollment(String userId, File video, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!video.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId), "video", video).build();
+        doMultipartPost("/enrollments/face", body, cb);
+    }
 
+    public void createFaceEnrollmentWithPhoto(String userId, String photoPath, Callback cb) {
+        createFaceEnrollmentWithPhoto(userId, new File(photoPath), cb);
+    }
+
+    public void createFaceEnrollmentWithPhoto(String userId, File photo, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!photo.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId), "photo", photo).build();
+        doMultipartPost("/enrollments/face", body, cb);
+    }
+
+    public void createFaceEnrollmentByUrl(String userId, String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/enrollments/face/byUrl", body, cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Video enrollment
+    // ------------------------------------------------------------------
+
+    public void createVideoEnrollment(String userId, String contentLanguage,
+                                      String phrase, File audio, File photo, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!audio.exists() || !photo.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "audio", audio), "photo", photo).build();
+        doMultipartPost("/enrollments/video", body, cb);
+    }
+
+    public void createVideoEnrollment(String userId, String contentLanguage,
+                                      String phrase, String videoPath, Callback cb) {
+        createVideoEnrollment(userId, contentLanguage, phrase, new File(videoPath), cb);
+    }
+
+    public void createVideoEnrollment(String userId, String contentLanguage,
+                                      String phrase, File video, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!video.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "video", video).build();
+        doMultipartPost("/enrollments/video", body, cb);
+    }
+
+    public void createVideoEnrollmentByUrl(String userId, String contentLanguage,
+                                           String phrase, String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/enrollments/video/byUrl", body, cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Groups
+    // ------------------------------------------------------------------
+
+    public void getAllGroups(Callback cb) {
+        doGet("/groups", cb);
+    }
+
+    public void getGroup(String groupId, Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        doGet("/groups/" + enc(groupId), cb);
+    }
+
+    public void groupExists(String groupId, Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        doGet("/groups/" + enc(groupId) + "/exists", cb);
+    }
+
+    public void createGroup(String description, Callback cb) {
+        MultipartBody body = mb().addFormDataPart("description", description).build();
+        doMultipartPost("/groups", body, cb);
+    }
+
+    public void addUserToGroup(String groupId, String userId, Callback cb) {
+        if (!groupIdFormatted(groupId) || !userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("groupId", groupId)
+                .addFormDataPart("userId", userId)
+                .build();
+        doMultipartPut("/groups/addUser", body, cb);
+    }
+
+    public void removeUserFromGroup(String groupId, String userId, Callback cb) {
+        if (!groupIdFormatted(groupId) || !userIdFormatted(userId)) { failValidation(cb); return; }
+        doDelete("/groups/removeUser?groupId=" + enc(groupId) + "&userId=" + enc(userId), cb);
+    }
+
+    public void deleteGroup(String groupId, Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        doDelete("/groups/" + enc(groupId), cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Voice verification / identification
+    // ------------------------------------------------------------------
+
+    public void voiceVerification(String userId, String contentLanguage, String phrase,
+                                  String recordingPath, Callback cb) {
+        voiceVerification(userId, contentLanguage, phrase, new File(recordingPath), cb);
+    }
+
+    public void voiceVerification(String userId, String contentLanguage, String phrase,
+                                  File recording, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!recording.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "recording", recording).build();
+        doMultipartPost("/verification/voice", body, cb);
+    }
+
+    public void voiceVerification(final String userId, final String contentLanguage,
+                                  final String phrase, final Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
         try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/verification/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-
-    public void faceVerificationWithPhoto(String userId, String photoPath, AsyncHttpResponseHandler responseHandler) {
-        faceVerificationWithPhoto(userId, new File(photoPath), responseHandler);
-    }
-
-    public void faceVerificationWithPhoto(String userId, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-
-        try {
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-
-        client.post(getAbsoluteUrl("/verification/face" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void faceVerificationByUrl(String userId, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/verification/face/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, String videoPath, AsyncHttpResponseHandler responseHandler) {
-        videoVerification(userId, contentLanguage, phrase, new File(videoPath), responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, File video, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("video", video);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/verification/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void videoVerification(String userId, String contentLanguage, String phrase, File audio, File photo, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("audio", audio);
-            params.put("photo", photo);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/verification/video" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void videoVerificationByUrl(String userId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("userId", userId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/verification/video/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void voiceIdentification(String groupId, String contentLanguage, String phrase, String recordingPath, AsyncHttpResponseHandler responseHandler) {
-        voiceIdentification(groupId, contentLanguage, phrase, new File(recordingPath), responseHandler);
-    }
-
-    public void voiceIdentification(String groupId, String contentLanguage, String phrase, File recording, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        try {
-            params.put("recording", recording);
-        } catch (FileNotFoundException e) {
-            Log.e(mTAG, "FileNotFoundException: " + e.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
-        client.post(getAbsoluteUrl("/identification/voice" + "?notificationURL=" + this.notificationURL), params, responseHandler);
-    }
-
-    public void voiceIdentification(final String groupId, final String contentLanguage, final String phrase, final AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        try{
-            final File recordingFile =  File.createTempFile("tempEnrollmentFile", ".wav");
+            final File recordingFile = File.createTempFile("tempEnrollmentFile", ".wav");
             final MediaRecorder myRecorder = new MediaRecorder();
             Utils.startMediaRecorder(myRecorder, recordingFile);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    myRecorder.stop();
-                    myRecorder.reset();
-                    myRecorder.release();
-                    voiceIdentification(groupId, contentLanguage, phrase, recordingFile, responseHandler);
-                }
+            new Handler().postDelayed(() -> {
+                myRecorder.stop();
+                myRecorder.reset();
+                myRecorder.release();
+                voiceVerification(userId, contentLanguage, phrase, recordingFile, cb);
             }, 4800);
-        }
-        catch (Exception ex) {
-            Log.e(mTAG,"Recording Exception:" + ex.getMessage());
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
+        } catch (Exception ex) {
+            Log.e(mTAG, "Recording Error: " + ex.getMessage());
+            postFailure(cb, 0, buildJSONFormatMessage(), ex);
         }
     }
 
-    public void voiceIdentificationByUrl(String groupId, String contentLanguage, String phrase, String fileUrl, AsyncHttpResponseHandler responseHandler) {
-        if(!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-        RequestParams params = new RequestParams();
-        params.put("groupId", groupId);
-        params.put("contentLanguage", contentLanguage);
-        params.put("phrase", phrase);
-        params.put("fileUrl", fileUrl);
-
-        client.post(getAbsoluteUrl("/identification/voice/byUrl" + "?notificationURL=" + this.notificationURL), params, responseHandler);
+    public void voiceVerificationByUrl(String userId, String contentLanguage, String phrase,
+                                       String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/verification/voice/byUrl", body, cb);
     }
 
-    public void encapsulatedVoiceEnrollment(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
+    // ------------------------------------------------------------------
+    // Face verification
+    // ------------------------------------------------------------------
 
+    public void faceVerification(String userId, String videoPath, Callback cb) {
+        faceVerification(userId, new File(videoPath), cb);
+    }
+
+    public void faceVerification(String userId, File video, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!video.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId), "video", video).build();
+        doMultipartPost("/verification/face", body, cb);
+    }
+
+    public void faceVerificationWithPhoto(String userId, String photoPath, Callback cb) {
+        faceVerificationWithPhoto(userId, new File(photoPath), cb);
+    }
+
+    public void faceVerificationWithPhoto(String userId, File photo, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!photo.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId), "photo", photo).build();
+        doMultipartPost("/verification/face", body, cb);
+    }
+
+    public void faceVerificationByUrl(String userId, String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/verification/face/byUrl", body, cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Video verification
+    // ------------------------------------------------------------------
+
+    public void videoVerification(String userId, String contentLanguage, String phrase,
+                                  String videoPath, Callback cb) {
+        videoVerification(userId, contentLanguage, phrase, new File(videoPath), cb);
+    }
+
+    public void videoVerification(String userId, String contentLanguage, String phrase,
+                                  File video, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!video.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "video", video).build();
+        doMultipartPost("/verification/video", body, cb);
+    }
+
+    public void videoVerification(String userId, String contentLanguage, String phrase,
+                                  File audio, File photo, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        if (!audio.exists() || !photo.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(withFile(mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "audio", audio), "photo", photo).build();
+        doMultipartPost("/verification/video", body, cb);
+    }
+
+    public void videoVerificationByUrl(String userId, String contentLanguage, String phrase,
+                                       String fileUrl, Callback cb) {
+        if (!userIdFormatted(userId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("userId", userId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/verification/video/byUrl", body, cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Voice identification
+    // ------------------------------------------------------------------
+
+    public void voiceIdentification(String groupId, String contentLanguage, String phrase,
+                                    String recordingPath, Callback cb) {
+        voiceIdentification(groupId, contentLanguage, phrase, new File(recordingPath), cb);
+    }
+
+    public void voiceIdentification(String groupId, String contentLanguage, String phrase,
+                                    File recording, Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        if (!recording.exists()) { failValidation(cb); return; }
+        MultipartBody body = withFile(mb()
+                .addFormDataPart("groupId", groupId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase),
+                "recording", recording).build();
+        doMultipartPost("/identification/voice", body, cb);
+    }
+
+    public void voiceIdentification(final String groupId, final String contentLanguage,
+                                    final String phrase, final Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        try {
+            final File recordingFile = File.createTempFile("tempEnrollmentFile", ".wav");
+            final MediaRecorder myRecorder = new MediaRecorder();
+            Utils.startMediaRecorder(myRecorder, recordingFile);
+            new Handler().postDelayed(() -> {
+                myRecorder.stop();
+                myRecorder.reset();
+                myRecorder.release();
+                voiceIdentification(groupId, contentLanguage, phrase, recordingFile, cb);
+            }, 4800);
+        } catch (Exception ex) {
+            Log.e(mTAG, "Recording Exception:" + ex.getMessage());
+            postFailure(cb, 0, buildJSONFormatMessage(), ex);
+        }
+    }
+
+    public void voiceIdentificationByUrl(String groupId, String contentLanguage, String phrase,
+                                         String fileUrl, Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
+        MultipartBody body = mb()
+                .addFormDataPart("groupId", groupId)
+                .addFormDataPart("contentLanguage", contentLanguage)
+                .addFormDataPart("phrase", phrase)
+                .addFormDataPart("fileUrl", fileUrl)
+                .build();
+        doMultipartPost("/identification/voice/byUrl", body, cb);
+    }
+
+    // ------------------------------------------------------------------
+    // Encapsulated views (launch our Activities)
+    // ------------------------------------------------------------------
+
+    public void encapsulatedVoiceEnrollment(Activity activity, String userId,
+                                            String contentLanguage, String phrase,
+                                            final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, VoiceEnrollmentView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("userId", userId);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("notificationURL", this.notificationURL);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
+        intent.putExtras(buildEncapsulatedBundle(userId, null, contentLanguage, phrase));
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedVoiceVerification(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
-
+    public void encapsulatedVoiceVerification(Activity activity, String userId,
+                                              String contentLanguage, String phrase,
+                                              final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, VoiceVerificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("userId", userId);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
+        intent.putExtras(buildEncapsulatedBundle(userId, null, contentLanguage, phrase));
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedVoiceIdentification(Activity activity, String groupId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!groupIdFormatted(groupId)) {
-            responseHandler.sendFailureMessage(200, null, buildJSONFormatMessage().toString().getBytes(), new Throwable());
-            return;
-        }
-
+    public void encapsulatedVoiceIdentification(Activity activity, String groupId,
+                                                String contentLanguage, String phrase,
+                                                final Callback cb) {
+        if (!groupIdFormatted(groupId)) { failValidation(cb); return; }
         Intent intent = new Intent(activity, VoiceIdentificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putString("groupId", groupId);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
+        intent.putExtras(buildEncapsulatedBundle(null, groupId, contentLanguage, phrase));
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedVideoEnrollment(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if(!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
-
+    public void encapsulatedVideoEnrollment(Activity activity, String userId,
+                                            String contentLanguage, String phrase,
+                                            final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, VideoEnrollmentView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("userId", userId);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
+        Bundle b = buildEncapsulatedBundle(userId, null, contentLanguage, phrase);
+        b.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
+        intent.putExtras(b);
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedVideoVerification(Activity activity, String userId, String contentLanguage, String phrase, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
-
+    public void encapsulatedVideoVerification(Activity activity, String userId,
+                                              String contentLanguage, String phrase,
+                                              final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, VideoVerificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("userId", userId);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("phrase", phrase);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
+        Bundle b = buildEncapsulatedBundle(userId, null, contentLanguage, phrase);
+        b.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
+        intent.putExtras(b);
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedFaceEnrollment(Activity activity, String userId, String contentLanguage, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
-
+    public void encapsulatedFaceEnrollment(Activity activity, String userId,
+                                           String contentLanguage,
+                                           final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, FaceEnrollmentView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("userId", userId);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
+        Bundle b = buildEncapsulatedBundle(userId, null, contentLanguage, null);
+        b.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
+        intent.putExtras(b);
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
-    public void encapsulatedFaceVerification(Activity activity, String userId, String contentLanguage, final JsonHttpResponseHandler responseHandler) {
-        if (!userIdFormatted(userId)) {
-            int duration = Toast.LENGTH_SHORT;
-            String response = buildJSONFormatMessage().toString();
-            Toast toast = Toast.makeText(activity, "Please make sure the user id is correct", duration);
-            try {
-                JSONObject json = new JSONObject(response);
-                toast = Toast.makeText(activity, json.get("message").toString(), duration);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            responseHandler.sendFailureMessage(200, null, response.getBytes(), new Throwable());
-            toast.show();
-            return;
-        }
-
+    public void encapsulatedFaceVerification(Activity activity, String userId,
+                                             String contentLanguage,
+                                             final Callback cb) {
+        if (!userIdFormatted(userId)) { showValidationToast(activity, cb); return; }
         Intent intent = new Intent(activity, FaceVerificationView.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("apiKey", this.apiKey);
-        bundle.putInt("voiceitThemeColor", this.voiceitThemeColor);
-        bundle.putString("apiToken", this.apiToken);
-        bundle.putString("userId", userId);
-        bundle.putString("notificationURL", this.notificationURL);
-        bundle.putString("contentLanguage", contentLanguage);
-        bundle.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
-        intent.putExtras(bundle);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(0, 0);
-
-        broadcastMessageHandler(activity, responseHandler);
-
-        //requestWritePermission(activity);
+        Bundle b = buildEncapsulatedBundle(userId, null, contentLanguage, null);
+        b.putBoolean("displayPreviewFrame", mDisplayPreviewFrame);
+        intent.putExtras(b);
+        startEncapsulatedActivity(activity, intent, cb);
     }
 
+    private Bundle buildEncapsulatedBundle(String userId, String groupId,
+                                           String contentLanguage, String phrase) {
+        Bundle b = new Bundle();
+        b.putString("apiKey", apiKey);
+        b.putString("apiToken", apiToken);
+        b.putInt("voiceitThemeColor", voiceitThemeColor);
+        b.putString("notificationURL", notificationURL);
+        if (userId != null) b.putString("userId", userId);
+        if (groupId != null) b.putString("groupId", groupId);
+        if (contentLanguage != null) b.putString("contentLanguage", contentLanguage);
+        if (phrase != null) b.putString("phrase", phrase);
+        return b;
+    }
 
-    private void broadcastMessageHandler(final Activity activity, final JsonHttpResponseHandler responseHandler) {
-        // Our handler for received Intents. This will be called whenever an Intent
-        // with an action named "voiceit-event" is broad-casted.
-        BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-            boolean broadcastTriggered = false;
+    private void startEncapsulatedActivity(Activity activity, Intent intent, Callback cb) {
+        activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
+        broadcastMessageHandler(activity, cb);
+    }
+
+    private void showValidationToast(Activity activity, Callback cb) {
+        JSONObject response = buildJSONFormatMessage();
+        try {
+            Toast.makeText(activity, response.getString("message"), Toast.LENGTH_SHORT).show();
+        } catch (JSONException ignored) {
+            Toast.makeText(activity, "Invalid id argument", Toast.LENGTH_SHORT).show();
+        }
+        postFailure(cb, 0, response, new IllegalArgumentException("Invalid id"));
+    }
+
+    private void broadcastMessageHandler(final Activity activity, final Callback cb) {
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            boolean fired = false;
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (!broadcastTriggered) {
-                    broadcastTriggered = true;
-                    // Get extra data included in the Intent
-                    String Response = intent.getStringExtra("Response");
-
-                    if (intent.getAction().equals("voiceit-success")) {
-                        responseHandler.sendSuccessMessage(200, null, Response.getBytes());
-                    }
-                    if (intent.getAction().equals("voiceit-failure")) {
-                        responseHandler.sendFailureMessage(200, null, Response.getBytes(), new Throwable());
-                    }
+                if (fired) return;
+                fired = true;
+                String responseStr = intent.getStringExtra("Response");
+                JSONObject json = null;
+                try {
+                    if (responseStr != null) json = new JSONObject(responseStr);
+                } catch (JSONException ignored) {
+                }
+                if ("voiceit-success".equals(intent.getAction()) && json != null) {
+                    final JSONObject finalJson = json;
+                    mainHandler.post(() -> cb.onSuccess(finalJson));
+                } else {
+                    final JSONObject finalErr = json;
+                    mainHandler.post(() -> cb.onFailure(0, finalErr,
+                            new IOException("Encapsulated flow failed")));
                 }
             }
         };
 
-        // Register observers (mMessageReceiver) to receive Intents with named actions
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("voiceit-success");
-        intentFilter.addAction("voiceit-failure");
-        LocalBroadcastManager.getInstance(activity).registerReceiver(mMessageReceiver, intentFilter);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("voiceit-success");
+        filter.addAction("voiceit-failure");
+        LocalBroadcastManager.getInstance(activity).registerReceiver(receiver, filter);
     }
 
-     private void requestWritePermission(Activity activity) {
-         if (Build.VERSION.SDK_INT >= 23) {
-             if (!Settings.System.canWrite(activity)) {
-                 Toast.makeText(activity, activity.getString(R.string.GRANT_WRITE_PERMISSON), Toast.LENGTH_LONG).show();
-                 Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
-                 intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                 activity.startActivity(intent);
-             }
-         }
-     }
+    @SuppressWarnings("unused")
+    private void requestWritePermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (!Settings.System.canWrite(activity)) {
+                Toast.makeText(activity, activity.getString(R.string.GRANT_WRITE_PERMISSON),
+                        Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                activity.startActivity(intent);
+            }
+        }
+    }
 
     private boolean userIdFormatted(String arg) {
+        if (arg == null || arg.length() < 4) return false;
         String id = arg.substring(arg.lastIndexOf('_') + 1);
         if (!id.matches("[A-Za-z0-9]+")
                 || !arg.substring(0, 3).equals("usr")
                 || id.length() != 32) {
-             Log.e(mTAG,"UserId does not meet requirements, " +
-                     "please ensure it is your user's 36 character alphanumeric string generated " +
-                     "from the createUser API call");
+            Log.e(mTAG, "UserId does not meet requirements, please ensure it is your "
+                    + "user's 36 character alphanumeric string generated from the createUser API call");
             return false;
         }
         return true;
     }
 
     private boolean groupIdFormatted(String arg) {
+        if (arg == null || arg.length() < 4) return false;
         String id = arg.substring(arg.lastIndexOf('_') + 1);
         if (!id.matches("[A-Za-z0-9]+")
                 || !arg.substring(0, 3).equals("grp")
                 || id.length() != 32) {
-             Log.e(mTAG,"GroupId does not meet requirements, " +
-                     "please ensure it is your group's 36 character alphanumeric string generated " +
-                     "from the createGroup API call");
+            Log.e(mTAG, "GroupId does not meet requirements, please ensure it is your "
+                    + "group's 36 character alphanumeric string generated from the createGroup API call");
             return false;
         }
         return true;
@@ -954,9 +808,10 @@ public class VoiceItAPI3 {
     private JSONObject buildJSONFormatMessage() {
         JSONObject json = new JSONObject();
         try {
+            json.put("responseCode", "GERR");
             json.put("message", "Incorrectly formatted id argument. Check log output for more information");
         } catch (JSONException e) {
-            Log.e(mTAG,"JSON Exception : " + e.getMessage());
+            Log.e(mTAG, "JSON Exception : " + e.getMessage());
         }
         return json;
     }
