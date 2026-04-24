@@ -62,7 +62,7 @@ dependencies {
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    implementation 'commons-io:commons-io:2.21.0'
+    implementation 'commons-io:commons-io:2.22.0'
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.31'
 
     // Network: replaces the abandoned com.loopj.android:android-async-http
