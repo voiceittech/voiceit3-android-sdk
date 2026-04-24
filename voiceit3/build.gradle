@@ -67,7 +67,7 @@ dependencies {
 
     // Network: replaces the abandoned com.loopj.android:android-async-http
     // entirely. OkHttp 4.x is the last line that still supports minSdk 21.
-    api 'com.squareup.okhttp3:okhttp:4.12.0'
+    api 'com.squareup.okhttp3:okhttp:5.3.2'
 
     // Face detection: replaces the deprecated com.google.android.gms:play-services-vision.
     // Standalone ML Kit (no Firebase coupling).
