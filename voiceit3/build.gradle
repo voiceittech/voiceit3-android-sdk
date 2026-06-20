@@ -63,7 +63,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'commons-io:commons-io:2.22.0'
-    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.31'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.32'
 
     // Network: replaces the abandoned com.loopj.android:android-async-http
     // entirely. OkHttp 4.x is the last line that still supports minSdk 21.
