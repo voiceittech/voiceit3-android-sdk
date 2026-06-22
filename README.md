@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/voiceittech/voiceit3-android-sdk/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/voiceittech/voiceit3-android-sdk/actions/workflows/test.yml)
 [![Dependabot](https://img.shields.io/github/issues-pr/voiceittech/voiceit3-android-sdk/dependencies?label=dependabot&logo=dependabot&color=025e8c)](https://github.com/voiceittech/voiceit3-android-sdk/pulls?q=is%3Apr+label%3Adependencies)
-[![Version](https://img.shields.io/badge/version-3.1.0-blue)](https://github.com/voiceittech/voiceit3-android-sdk)
+[![Version](https://img.shields.io/badge/version-4.0.1-blue)](https://github.com/voiceittech/voiceit3-android-sdk)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/voiceittech/voiceit3-android-sdk/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2021%2B-brightgreen)](https://github.com/voiceittech/voiceit3-android-sdk)
 [![VoiceIt API](https://img.shields.io/badge/VoiceIt-API%203.0-blue)](https://voiceit.io)
@@ -93,7 +93,7 @@ Then add the dependency to your app's `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'com.voiceittech:voiceit3-android-sdk:3.0.0'
+    implementation 'com.voiceittech:voiceit3-android-sdk:4.0.1'
 }
 ```
 
