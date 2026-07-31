@@ -57,6 +57,19 @@
 
     <string name="GERR">Sorry, something went wrong.\nPlease try again.</string>
 
+    <!-- Added for parity with the web-SDK: every API 3.0 response code now has a
+         message so an unmapped code can no longer throw Resources.NotFoundException
+         (which previously crashed the app). -->
+    <string name="FADF">Sorry, we couldn\'t confirm a live capture.\nPlease try again in good lighting, looking directly at the camera.</string>
+    <string name="FALI">Liveness check failed.\nPlease try again.</string>
+    <string name="NSPE">Enrollment was not similar to previous enrollments.\nMake sure to enroll only one person.</string>
+    <string name="ENFD">Sorry, no enrollment was found.\nPlease enroll before verifying.</string>
+    <string name="EMPF">The recording was empty.\nPlease try again.</string>
+    <string name="UDNM">Sorry, something went wrong.\nPlease contact app developer with error code: UDNM.</string>
+    <string name="IEID">Sorry, something went wrong.\nPlease contact app developer with error code: IEID.</string>
+    <string name="ULMT">Sorry, the user limit has been reached.\nPlease contact app developer with error code: ULMT.</string>
+    <string name="EROR">Sorry, something went wrong.\nPlease try again.</string>
+
     <string name="CHECK_INTERNET">Unable to contact server.\nPlease check your internet connection.</string>
 
     <string name="CONTINUE">Continue</string>

@@ -55,6 +55,18 @@
 
     <string name="ES_GERR">Lo siento, algo salió mal \n Vuelve a intentarlo</string>
 
+    <!-- Paridad con el web-SDK: cada código de respuesta de la API 3.0 tiene mensaje
+         para que un código sin mapear no cause Resources.NotFoundException. -->
+    <string name="ES_FADF">Lo sentimos, no pudimos confirmar una captura en vivo \n Vuelve a intentarlo con buena iluminación, mirando a la cámara.</string>
+    <string name="ES_FALI">La verificación de vitalidad falló \n Vuelve a intentarlo.</string>
+    <string name="ES_NSPE">El enrolamiento no fue lo suficientemente similar a los anteriores \n Asegúrate de enrolar solo a una persona.</string>
+    <string name="ES_ENFD">Lo siento, no se encontró ningún enrolamiento \n Por favor, enrólate antes de verificar.</string>
+    <string name="ES_EMPF">La grabación estaba vacía \n Vuelve a intentarlo.</string>
+    <string name="ES_UDNM">Lo siento, algo salió mal \n Comuníquese con el desarrollador con el código de error: UDNM.</string>
+    <string name="ES_IEID">Lo siento, algo salió mal \n Comuníquese con el desarrollador con el código de error: IEID.</string>
+    <string name="ES_ULMT">Lo siento, se alcanzó el límite de usuarios \n Comuníquese con el desarrollador con el código de error: ULMT.</string>
+    <string name="ES_EROR">Lo siento, algo salió mal \n Vuelve a intentarlo.</string>
+
     <string name="ES_CHECK_INTERNET">No se puede contactar con el servidor \n Verifique su conexión a Internet</string>
 
     <string name="ES_CONTINUE">Continuar</string>
