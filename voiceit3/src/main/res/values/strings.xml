@@ -62,6 +62,7 @@
          (which previously crashed the app). -->
     <string name="FADF">Sorry, we couldn\'t confirm a live capture.\nPlease try again in good lighting, looking directly at the camera.</string>
     <string name="FALI">Liveness check failed.\nPlease try again.</string>
+    <string name="INJD">Sorry, we couldn\'t verify this capture came from a live camera.\nPlease use your device camera and try again.</string>
     <string name="NSPE">Enrollment was not similar to previous enrollments.\nMake sure to enroll only one person.</string>
     <string name="ENFD">Sorry, no enrollment was found.\nPlease enroll before verifying.</string>
     <string name="EMPF">The recording was empty.\nPlease try again.</string>

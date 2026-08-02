@@ -59,6 +59,7 @@
          para que un código sin mapear no cause Resources.NotFoundException. -->
     <string name="ES_FADF">Lo sentimos, no pudimos confirmar una captura en vivo \n Vuelve a intentarlo con buena iluminación, mirando a la cámara.</string>
     <string name="ES_FALI">La verificación de vitalidad falló \n Vuelve a intentarlo.</string>
+    <string name="ES_INJD">Lo sentimos, no pudimos verificar que la captura provenga de una cámara en vivo \n Usa la cámara de tu dispositivo y vuelve a intentarlo.</string>
     <string name="ES_NSPE">El enrolamiento no fue lo suficientemente similar a los anteriores \n Asegúrate de enrolar solo a una persona.</string>
     <string name="ES_ENFD">Lo siento, no se encontró ningún enrolamiento \n Por favor, enrólate antes de verificar.</string>
     <string name="ES_EMPF">La grabación estaba vacía \n Vuelve a intentarlo.</string>
